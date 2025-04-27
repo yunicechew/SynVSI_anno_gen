@@ -37,10 +37,3 @@ Location: `c_relative_direction_tool/`
 #### Outputs:
 - `relative_direction_all.csv`: CSV with all relative direction calculations
 - Visualization images showing direction relationships
-
-## Usage Instructions
-
-1. First run the annotation cleanup tool to process raw data:
-```bash
-python anno_cleanup_tool/anno_extraction.py
-```
