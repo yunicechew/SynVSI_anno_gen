@@ -6,16 +6,16 @@ import os
 def visualize_result(result_data, standing_at_name, facing_at_name, locate_at_name):
     plt.figure(figsize=(10, 10))
     
-    # Extract points from the result data
+    # Extract points from the result data (updated to match new CSV structure)
     points = {
-        'standing_at': {'point': np.array([result_data[result_data['PointType'] == 'standing_at']['WorldX'].iloc[0],
-                                         result_data[result_data['PointType'] == 'standing_at']['WorldY'].iloc[0]]),
+        'standing_at': {'point': np.array([result_data['standing_at_x'].iloc[0],
+                                         result_data['standing_at_y'].iloc[0]]),
                        'name': standing_at_name, 'color': 'green', 'label': 'Standing At (Origin)'},
-        'facing_at': {'point': np.array([result_data[result_data['PointType'] == 'facing_at']['WorldX'].iloc[0],
-                                       result_data[result_data['PointType'] == 'facing_at']['WorldY'].iloc[0]]),
+        'facing_at': {'point': np.array([result_data['facing_at_x'].iloc[0],
+                                       result_data['facing_at_y'].iloc[0]]),
                      'name': facing_at_name, 'color': 'orange', 'label': 'Facing At (Y-axis)'},
-        'locate_at': {'point': np.array([result_data[result_data['PointType'] == 'locate_at']['WorldX'].iloc[0],
-                                       result_data[result_data['PointType'] == 'locate_at']['WorldY'].iloc[0]]),
+        'locate_at': {'point': np.array([result_data['locate_at_x'].iloc[0],
+                                       result_data['locate_at_y'].iloc[0]]),
                      'name': locate_at_name, 'color': 'red', 'label': 'Locate At'}
     }
     
@@ -61,11 +61,14 @@ def visualize_result(result_data, standing_at_name, facing_at_name, locate_at_na
     plt.plot([points['standing_at']['point'][0], points['locate_at']['point'][0]], 
              [points['standing_at']['point'][1], points['locate_at']['point'][1]], 'r--')
     
-    # Get direction from the data
-    direction = result_data[result_data['PointType'] == 'locate_at']['RelativeDirectionHard'].iloc[0]
+    # Get directions from the data (updated to show all three difficulty levels)
+    direction_hard = result_data['AnswerHard'].iloc[0]
+    direction_medium = result_data['AnswerMedium'].iloc[0]
+    direction_easy = result_data['AnswerEasy'].iloc[0]
     
-    # Configure plot appearance
-    plt.title(f'Relative Direction (Possibility {result_data["Possibility"].iloc[0]}): {direction}')
+    # Configure plot appearance with all direction levels
+    plt.title(f'Relative Directions (Possibility {result_data["Possibility"].iloc[0]})\n'
+              f'Hard: {direction_hard} | Medium: {direction_medium} | Easy: {direction_easy}')
     plt.xlabel('World X (fixed)')
     plt.ylabel('World Y (fixed)')
     plt.grid(True, linestyle='--', alpha=0.7)
@@ -102,9 +105,9 @@ def main():
         return
     
     # Get actor names for this possibility
-    standing_at_name = result_data[result_data['PointType'] == 'standing_at']['ActorName'].iloc[0]
-    facing_at_name = result_data[result_data['PointType'] == 'facing_at']['ActorName'].iloc[0]
-    locate_at_name = result_data[result_data['PointType'] == 'locate_at']['ActorName'].iloc[0]
+    standing_at_name = result_data['standing_at'].iloc[0]
+    facing_at_name = result_data['facing_at'].iloc[0]
+    locate_at_name = result_data['locate_at'].iloc[0]
     
     # Generate visualization
     visualize_result(result_data, standing_at_name, facing_at_name, locate_at_name)
@@ -113,7 +116,10 @@ def main():
     print(f"Standing at: {standing_at_name}")
     print(f"Facing at: {facing_at_name}")
     print(f"Locating: {locate_at_name}")
-    print(f"Direction: {result_data[result_data['PointType'] == 'locate_at']['RelativeDirectionHard'].iloc[0]}")
+    print(f"Directions:")
+    print(f"  Hard: {result_data['AnswerHard'].iloc[0]}")
+    print(f"  Medium: {result_data['AnswerMedium'].iloc[0]}")
+    print(f"  Easy: {result_data['AnswerEasy'].iloc[0]}")
 
 if __name__ == "__main__":
     main()

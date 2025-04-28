@@ -127,7 +127,7 @@ def get_actor_bounds(actor):
 
 def main():
     # Specify which possibility to visualize
-    possibility_id = 401  # Change this number to visualize different pairs
+    possibility_id = 1  # Change this number to visualize different pairs
     
     # Read the CSV files
     df_actors = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/anno_cleanup_tool/output/ranked_unique_actor_anno.csv')
@@ -144,12 +144,12 @@ def main():
     bounds1 = get_actor_bounds(actor1)
     bounds2 = get_actor_bounds(actor2)
     
-    # Visualize
-    visualize_distance(actor1, actor2, bounds1, bounds2, pair['MinimumDistance'], possibility_id)
+    # Visualize using pre-computed distance from CSV
+    visualize_distance(actor1, actor2, bounds1, bounds2, pair['Answer'], possibility_id)
     print(f"Visualizing possibility {possibility_id}:")
     print(f"Actor1: {pair['Actor1']}")
     print(f"Actor2: {pair['Actor2']}")
-    print(f"Minimum Distance (3D): {pair['MinimumDistance']:.2f}")
+    print(f"Distance: {pair['Answer']:.2f} meters")
 
 if __name__ == "__main__":
     main()
