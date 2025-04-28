@@ -98,7 +98,7 @@ def main():
     4. Outputs results to CSV with questions and answers at three difficulty levels
     """
     # Load actor positions from CSV
-    df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/anno_cleanup_tool/output/ranked_unique_actor_anno.csv')
+    df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/ranked_unique_actor_anno.csv')
     actor_names = df['ActorName'].unique()
     output_dir = ensure_output_directory()
     

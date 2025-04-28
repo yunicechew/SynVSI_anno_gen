@@ -3,6 +3,9 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
+# Configuration variables
+POSSIBILITY_ID = 1  # Change this to visualize different actor pairs
+
 def visualize_distance(actor1, actor2, actor1_bounds, actor2_bounds, min_distance, possibility_id):
     fig = plt.figure(figsize=(12, 12))
     ax = fig.add_subplot(111, projection='3d')
@@ -126,15 +129,12 @@ def get_actor_bounds(actor):
     return [x_min, x_max, y_min, y_max, z_min, z_max]
 
 def main():
-    # Specify which possibility to visualize
-    possibility_id = 1  # Change this number to visualize different pairs
-    
     # Read the CSV files
-    df_actors = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/anno_cleanup_tool/output/ranked_unique_actor_anno.csv')
+    df_actors = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/ranked_unique_actor_anno.csv')
     df_distances = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/m_absolute_distance_tool/output/absolute_distances_all.csv')
     
     # Get the specific pair from distances file
-    pair = df_distances[df_distances['Possibility'] == possibility_id].iloc[0]
+    pair = df_distances[df_distances['Possibility'] == POSSIBILITY_ID].iloc[0]
     
     # Get actor data
     actor1 = df_actors[df_actors['ActorName'] == pair['Actor1']].iloc[0]
@@ -145,8 +145,8 @@ def main():
     bounds2 = get_actor_bounds(actor2)
     
     # Visualize using pre-computed distance from CSV
-    visualize_distance(actor1, actor2, bounds1, bounds2, pair['Answer'], possibility_id)
-    print(f"Visualizing possibility {possibility_id}:")
+    visualize_distance(actor1, actor2, bounds1, bounds2, pair['Answer'], POSSIBILITY_ID)
+    print(f"Visualizing possibility {POSSIBILITY_ID}:")
     print(f"Actor1: {pair['Actor1']}")
     print(f"Actor2: {pair['Actor2']}")
     print(f"Distance: {pair['Answer']:.2f} meters")

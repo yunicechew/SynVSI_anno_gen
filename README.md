@@ -1,102 +1,71 @@
-# SynVSI Annotation Generation Tools
+# SynVSI Spatial Annotation Toolkit
 
-This repository contains a comprehensive suite of tools for processing and visualizing spatial annotation data from virtual scenes. The tools are designed to analyze object positions, calculate distances, and determine relative spatial relationships between objects in 3D environments.
+A comprehensive suite of tools for processing, analyzing, and visualizing spatial annotation data from virtual 3D environments. The toolkit enables researchers and developers to extract meaningful spatial relationships between objects in complex scenes.
 
-## Tools Overview
+## Key Features
 
-### 1. Annotation Cleanup Tool
-Location: `anno_cleanup_tool/`
+- **Data Processing**: Clean and organize raw spatial annotation data
+- **Distance Analysis**: Calculate precise distances between object pairs
+- **Direction Analysis**: Determine relative spatial relationships
+- **Visualization**: Generate 2D and 3D representations of spatial data
 
-#### Purpose
-Processes raw annotation data to extract and organize object information, creating clean datasets and visualizations for further analysis.
+## Tool Suite
 
-#### Key Files
-- `anno_extraction.py`: Processes raw annotation data to extract unique actor information
-  - Cleans actor names for better readability
-  - Records first appearance frame for each actor
-  - Preserves world coordinates and dimensions
-  - Outputs organized CSV data
+### 1. Data Cleanup & Extraction
+Location: `0_data_cleanup_tool/`
 
-- `2d_anno_visualization.py`: Creates top-down 2D visualizations
-  - Plots actor positions on X-Y plane
-  - Draws bounding boxes for each object
-  - Labels objects with names and first appearance frames
-  - Includes grid and axis labels for reference
+#### Core Functionality
+- Processes raw annotation frames into structured datasets
+- Extracts and cleans object metadata (names, positions, dimensions)
+- Filters objects based on visibility and size thresholds
+- Converts spatial measurements to consistent units
 
-- `3d_anno_visualization.py`: Generates detailed 3D scene visualizations
-  - Creates 3D bounding boxes for all objects
-  - Shows spatial relationships in all dimensions
-  - Provides interactive 3D view
-  - Includes object labels and frame information
+#### Key Components
+- `anno_extraction.py`: Main data processing pipeline
+- `2d_anno_visualization.py`: Top-down 2D scene plots
+- `3d_anno_visualization.py`: Interactive 3D scene views
 
 #### Outputs
-- `ranked_unique_actor_anno.csv`: Comprehensive CSV containing:
-  - Actor names and cleaned identifiers
-  - First appearance frame numbers
-  - World coordinates (X, Y, Z)
-  - Object dimensions
-- 2D and 3D visualization images for scene understanding
+- `ranked_unique_actor_anno.csv`: Cleaned object metadata
+- Visualizations showing object positions and relationships
 
-### 2. Absolute Distance Tool
+### 2. Absolute Distance Analysis
 Location: `m_absolute_distance_tool/`
 
-#### Purpose
-Calculates and visualizes precise distances between pairs of objects in the 3D environment.
+#### Core Functionality
+- Computes minimum distances between all object pairs
+- Generates natural language questions about spatial relationships
+- Handles complex cases like overlapping objects
 
-#### Key Files
+#### Key Components
 - `absolute_distance_all.py`: Distance calculation engine
-  - Computes minimum distances between all possible object pairs
-  - Considers object dimensions and bounding boxes
-  - Generates natural language questions about distances
-  - Handles edge cases and overlapping objects
-
 - `absolute_distance_visual.py`: 3D distance visualization
-  - Creates detailed 3D visualizations of object pairs
-  - Shows minimum distance paths
-  - Includes translucent bounding boxes
-  - Provides distance measurements in meters
 
 #### Outputs
-- `absolute_distances_all.csv`: Comprehensive distance data
-  - All possible object pair combinations
-  - Precise distance measurements in meters
-  - Natural language questions for each pair
-  - Systematic possibility IDs for reference
-- 3D visualization images showing distance relationships
+- `absolute_distances_all.csv`: Comprehensive distance measurements
+- Visualizations highlighting distance relationships
 
-### 3. Relative Direction Tool
+### 3. Relative Direction Analysis
 Location: `c_relative_direction_tool/`
 
-#### Purpose
-Analyzes and describes relative spatial relationships between objects using directional terms.
+#### Core Functionality
+- Analyzes directional relationships between object triplets
+- Supports multiple difficulty levels for question generation
+- Uses quadrant-based direction classification
 
-#### Key Files
+#### Key Components
 - `relative_direction_all.py`: Direction analysis engine
-  - Calculates relative directions between object triplets
-  - Supports multiple difficulty levels
-  - Generates natural language questions
-  - Uses quadrant-based direction system
-
 - `relative_direction_visual.py`: Direction visualization
-  - Creates visual representations of directional relationships
-  - Shows reference frames and orientations
-  - Highlights spatial relationships
-  - Supports multiple perspective views
 
 #### Outputs
-- `relative_direction_all.csv`: Detailed directional data
-  - Complete set of object triplet combinations
-  - Questions at three difficulty levels
-  - Precise directional answers
-  - Quadrant-based classifications
-- Visualization images showing direction relationships
+- `relative_direction_all.csv`: Directional relationship data
+- Visualizations showing reference frames and orientations
 
-## Usage
-Each tool can be run independently from its respective directory. The tools process data from the input CSV files and generate both numerical results and visual representations for analysis.
+## Getting Started
 
-## Dependencies
+### Prerequisites
 - Python 3.x
-- pandas
-- numpy
-- matplotlib
-- mpl_toolkits
+- Required packages:
+  ```bash
+  pip install pandas numpy matplotlib mpl_toolkits
+  ```

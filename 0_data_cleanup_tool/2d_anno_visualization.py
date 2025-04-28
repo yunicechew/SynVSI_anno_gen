@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 # Read the CSV file
-df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/anno_cleanup_tool/output/ranked_unique_actor_anno.csv')
+df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/ranked_unique_actor_anno.csv')
 
 # Create the figure and axis
 plt.figure(figsize=(12, 8))
@@ -48,5 +48,5 @@ plt.axis('equal')  # Set equal aspect ratio
 plt.tight_layout()
 
 # Save the plot
-plt.savefig('/Users/bytedance/Desktop/SynVSI_anno_gen/anno_cleanup_tool/output/2d_anno_visualization.png', dpi=300, bbox_inches='tight')
+plt.savefig('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/2d_anno_visualization.png', dpi=300, bbox_inches='tight')
 plt.show()

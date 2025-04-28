@@ -3,6 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+# Configuration variables
+POSSIBILITY_ID = 30  # Change this to visualize different combinations
+
 def visualize_result(result_data, standing_at_name, facing_at_name, locate_at_name):
     plt.figure(figsize=(10, 10))
     
@@ -54,7 +57,7 @@ def visualize_result(result_data, standing_at_name, facing_at_name, locate_at_na
         
         # Draw positive axis (with arrow)
         plt.arrow(standing_at[0], standing_at[1], 
-                pos[0], pos[1], head_width=4, head_length=4, fc=color, ec=color,
+                pos[0], pos[1], head_width=0.03, head_length=0.03, fc=color, ec=color,
                 label=label if axis == 'y_axis' else None)
     
     # Draw dashed line from origin to target point
@@ -91,17 +94,14 @@ def ensure_output_directory():
     return output_dir
 
 def main():
-    # Specify which possibility to visualize
-    possibility_id = 1  # Change this number to visualize different combinations
-    
     # Read the pre-calculated results
     df_all = pd.read_csv(os.path.join(os.path.dirname(__file__), 'output', 'relative_direction_all.csv'))
     
     # Get data for the specified possibility
-    result_data = df_all[df_all['Possibility'] == possibility_id]
+    result_data = df_all[df_all['Possibility'] == POSSIBILITY_ID]
     
     if len(result_data) == 0:
-        print(f"No data found for possibility {possibility_id}")
+        print(f"No data found for possibility {POSSIBILITY_ID}")
         return
     
     # Get actor names for this possibility

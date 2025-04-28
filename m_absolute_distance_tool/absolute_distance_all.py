@@ -55,7 +55,7 @@ def ensure_output_directory():
 
 def main():
     # Read the CSV file
-    df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/anno_cleanup_tool/output/ranked_unique_actor_anno.csv')
+    df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/ranked_unique_actor_anno.csv')
     actor_names = df['ActorName'].unique()
     output_dir = ensure_output_directory()
     
