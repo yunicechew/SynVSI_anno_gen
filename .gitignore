@@ -22,8 +22,9 @@ wheels/
 *.egg
 
 # Output files
-# Ignore all output directories
-*/output/
+**/output/
+*.png
+*.csv
 
 # Original UE annotation files
 0_original_ue_anno/
