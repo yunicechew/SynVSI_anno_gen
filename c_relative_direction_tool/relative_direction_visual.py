@@ -3,19 +3,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+# Configuration variables
+POSSIBILITY_ID = 30  # Change this to visualize different combinations
+
 def visualize_result(result_data, standing_at_name, facing_at_name, locate_at_name):
     plt.figure(figsize=(10, 10))
     
-    # Extract points from the result data
+    # Extract points from the result data (updated to match new CSV structure)
     points = {
-        'standing_at': {'point': np.array([result_data[result_data['PointType'] == 'standing_at']['WorldX'].iloc[0],
-                                         result_data[result_data['PointType'] == 'standing_at']['WorldY'].iloc[0]]),
+        'standing_at': {'point': np.array([result_data['standing_at_x'].iloc[0],
+                                         result_data['standing_at_y'].iloc[0]]),
                        'name': standing_at_name, 'color': 'green', 'label': 'Standing At (Origin)'},
-        'facing_at': {'point': np.array([result_data[result_data['PointType'] == 'facing_at']['WorldX'].iloc[0],
-                                       result_data[result_data['PointType'] == 'facing_at']['WorldY'].iloc[0]]),
+        'facing_at': {'point': np.array([result_data['facing_at_x'].iloc[0],
+                                       result_data['facing_at_y'].iloc[0]]),
                      'name': facing_at_name, 'color': 'orange', 'label': 'Facing At (Y-axis)'},
-        'locate_at': {'point': np.array([result_data[result_data['PointType'] == 'locate_at']['WorldX'].iloc[0],
-                                       result_data[result_data['PointType'] == 'locate_at']['WorldY'].iloc[0]]),
+        'locate_at': {'point': np.array([result_data['locate_at_x'].iloc[0],
+                                       result_data['locate_at_y'].iloc[0]]),
                      'name': locate_at_name, 'color': 'red', 'label': 'Locate At'}
     }
     
@@ -54,18 +57,21 @@ def visualize_result(result_data, standing_at_name, facing_at_name, locate_at_na
         
         # Draw positive axis (with arrow)
         plt.arrow(standing_at[0], standing_at[1], 
-                pos[0], pos[1], head_width=4, head_length=4, fc=color, ec=color,
+                pos[0], pos[1], head_width=0.03, head_length=0.03, fc=color, ec=color,
                 label=label if axis == 'y_axis' else None)
     
     # Draw dashed line from origin to target point
     plt.plot([points['standing_at']['point'][0], points['locate_at']['point'][0]], 
              [points['standing_at']['point'][1], points['locate_at']['point'][1]], 'r--')
     
-    # Get direction from the data
-    direction = result_data[result_data['PointType'] == 'locate_at']['RelativeDirectionHard'].iloc[0]
+    # Get directions from the data (updated to show all three difficulty levels)
+    direction_hard = result_data['AnswerHard'].iloc[0]
+    direction_medium = result_data['AnswerMedium'].iloc[0]
+    direction_easy = result_data['AnswerEasy'].iloc[0]
     
-    # Configure plot appearance
-    plt.title(f'Relative Direction (Possibility {result_data["Possibility"].iloc[0]}): {direction}')
+    # Configure plot appearance with all direction levels
+    plt.title(f'Relative Directions (Possibility {result_data["Possibility"].iloc[0]})\n'
+              f'Hard: {direction_hard} | Medium: {direction_medium} | Easy: {direction_easy}')
     plt.xlabel('World X (fixed)')
     plt.ylabel('World Y (fixed)')
     plt.grid(True, linestyle='--', alpha=0.7)
@@ -88,23 +94,20 @@ def ensure_output_directory():
     return output_dir
 
 def main():
-    # Specify which possibility to visualize
-    possibility_id = 1  # Change this number to visualize different combinations
-    
     # Read the pre-calculated results
     df_all = pd.read_csv(os.path.join(os.path.dirname(__file__), 'output', 'relative_direction_all.csv'))
     
     # Get data for the specified possibility
-    result_data = df_all[df_all['Possibility'] == possibility_id]
+    result_data = df_all[df_all['Possibility'] == POSSIBILITY_ID]
     
     if len(result_data) == 0:
-        print(f"No data found for possibility {possibility_id}")
+        print(f"No data found for possibility {POSSIBILITY_ID}")
         return
     
     # Get actor names for this possibility
-    standing_at_name = result_data[result_data['PointType'] == 'standing_at']['ActorName'].iloc[0]
-    facing_at_name = result_data[result_data['PointType'] == 'facing_at']['ActorName'].iloc[0]
-    locate_at_name = result_data[result_data['PointType'] == 'locate_at']['ActorName'].iloc[0]
+    standing_at_name = result_data['standing_at'].iloc[0]
+    facing_at_name = result_data['facing_at'].iloc[0]
+    locate_at_name = result_data['locate_at'].iloc[0]
     
     # Generate visualization
     visualize_result(result_data, standing_at_name, facing_at_name, locate_at_name)
@@ -113,7 +116,10 @@ def main():
     print(f"Standing at: {standing_at_name}")
     print(f"Facing at: {facing_at_name}")
     print(f"Locating: {locate_at_name}")
-    print(f"Direction: {result_data[result_data['PointType'] == 'locate_at']['RelativeDirectionHard'].iloc[0]}")
+    print(f"Directions:")
+    print(f"  Hard: {result_data['AnswerHard'].iloc[0]}")
+    print(f"  Medium: {result_data['AnswerMedium'].iloc[0]}")
+    print(f"  Easy: {result_data['AnswerEasy'].iloc[0]}")
 
 if __name__ == "__main__":
     main()

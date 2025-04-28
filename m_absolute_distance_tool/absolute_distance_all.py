@@ -55,7 +55,7 @@ def ensure_output_directory():
 
 def main():
     # Read the CSV file
-    df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/anno_cleanup_tool/output/ranked_unique_actor_anno.csv')
+    df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/ranked_unique_actor_anno.csv')
     actor_names = df['ActorName'].unique()
     output_dir = ensure_output_directory()
     
@@ -71,12 +71,18 @@ def main():
                     # Calculate minimum distance
                     distance = calculate_min_distance(df, actor1, actor2)
                     
-                    # Record results
+                    # Get cleaned names from the DataFrame
+                    clean_actor1 = df[df['ActorName'] == actor1]['CleanedActorName'].iloc[0]
+                    clean_actor2 = df[df['ActorName'] == actor2]['CleanedActorName'].iloc[0]
+                    question = f"Measuring from the closest point of each object, what is the distance between the {clean_actor1} and the {clean_actor2} (in meters)?"
+                    
+                    # Record results with formatted distance (rounded to 2 decimal places)
                     all_results.append({
                         'Possibility': possibility_counter,
                         'Actor1': actor1,
                         'Actor2': actor2,
-                        'MinimumDistance': distance
+                        'Question': question,
+                        'Answer': round(distance, 2)
                     })
                     
                     possibility_counter += 1

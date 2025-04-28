@@ -2,10 +2,18 @@ import pandas as pd
 import numpy as np
 import os
 
-# Configuration
-ENABLE_VISUALIZATION = False  # Toggle to control visualization generation
-
 def determine_quadrant(df, standing_at_name, facing_at_name, locate_at_name):
+    """
+    Calculate relative direction between three points in 2D space.
+    Args:
+        df: DataFrame containing actor positions
+        standing_at_name: Name of standing position actor
+        facing_at_name: Name of facing direction actor
+        locate_at_name: Name of object to locate     
+    Returns:
+        Dictionary containing direction information in three difficulty levels
+        and coordinate system transformation details
+    """
     # Get world coordinates for each point from the DataFrame
     standing_at = df[df['ActorName'] == standing_at_name][['WorldX', 'WorldY']].values[0]
     facing_at = df[df['ActorName'] == facing_at_name][['WorldX', 'WorldY']].values[0]
@@ -38,16 +46,20 @@ def determine_quadrant(df, standing_at_name, facing_at_name, locate_at_name):
     
     # Hard version (quadrant-based)
     if x_coord >= 0 and y_coord >= 0:
-        quadrant_hard = "front-right (quadrant I)"
+        quadrant_hard = "front-right"
+        quadrant_num = "quadrant I"
         quadrant_easy = "right"
     elif x_coord < 0 and y_coord >= 0:
-        quadrant_hard = "front-left (quadrant II)"
+        quadrant_hard = "front-left"
+        quadrant_num = "quadrant II"
         quadrant_easy = "left"
     elif x_coord < 0 and y_coord < 0:
-        quadrant_hard = "back-left (quadrant III)"
+        quadrant_hard = "back-left"
+        quadrant_num = "quadrant III"
         quadrant_easy = "left"
     else:  # x_coord >= 0 and y_coord < 0
-        quadrant_hard = "back-right (quadrant IV)"
+        quadrant_hard = "back-right"
+        quadrant_num = "quadrant IV"
         quadrant_easy = "right"
     
     # Medium version (135° sectors)
@@ -60,14 +72,15 @@ def determine_quadrant(df, standing_at_name, facing_at_name, locate_at_name):
     
     return {
         'quadrant': quadrant_hard,
+        'quadrant_num': quadrant_num,
         'quadrant_medium': quadrant_medium,
         'quadrant_easy': quadrant_easy,
-        'new_coords': (x_coord, y_coord),  # Coordinates in relative system
-        'standing_at': standing_at,        # World coordinates
-        'facing_at': facing_at,           # World coordinates
-        'locate_at': locate_at,           # World coordinates
-        'x_axis': x_axis,                 # Unit vector
-        'y_axis': y_axis                  # Unit vector
+        'new_coords': (x_coord, y_coord),
+        'standing_at': standing_at,
+        'facing_at': facing_at,
+        'locate_at': locate_at,
+        'x_axis': x_axis,
+        'y_axis': y_axis
     }
 
 def ensure_output_directory():
@@ -76,10 +89,16 @@ def ensure_output_directory():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     return output_dir
-
 def main():
+    """
+    Main processing function that:
+    1. Loads actor position data
+    2. Generates all valid combinations of standing/facing/locate points
+    3. Calculates relative directions for each combination
+    4. Outputs results to CSV with questions and answers at three difficulty levels
+    """
     # Load actor positions from CSV
-    df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/anno_cleanup_tool/output/ranked_unique_actor_anno.csv')
+    df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/ranked_unique_actor_anno.csv')
     actor_names = df['ActorName'].unique()
     output_dir = ensure_output_directory()
     
@@ -90,31 +109,41 @@ def main():
     for standing_at in actor_names:
         for facing_at in actor_names:
             for locate_at in actor_names:
-                # Skip invalid combinations where points are the same
                 if standing_at != facing_at and standing_at != locate_at and facing_at != locate_at:
                     try:
-                        # Calculate relative directions
                         result = determine_quadrant(df, standing_at, facing_at, locate_at)
                         
-                        # Store actor names for current combination
-                        points = {
-                            'standing_at': standing_at,  # Origin point
-                            'facing_at': facing_at,      # Defines forward direction
-                            'locate_at': locate_at       # Target point to describe
-                        }
+                        # Get cleaned names from the DataFrame
+                        clean_standing = df[df['ActorName'] == standing_at]['CleanedActorName'].iloc[0]
+                        clean_facing = df[df['ActorName'] == facing_at]['CleanedActorName'].iloc[0]
+                        clean_locate = df[df['ActorName'] == locate_at]['CleanedActorName'].iloc[0]
                         
-                        # Record results for each point in the combination
-                        for point_type, actor_name in points.items():
-                            all_results.append({
-                                'Possibility': possibility_counter,  # Unique ID for this combination
-                                'ActorName': actor_name,
-                                'WorldX': result[point_type][0],
-                                'WorldY': result[point_type][1],
-                                'PointType': point_type,
-                                'RelativeDirectionHard': result['quadrant'] if point_type == 'locate_at' else None,
-                                'RelativeDirectionMedium': result['quadrant_medium'] if point_type == 'locate_at' else None,
-                                'RelativeDirectionEasy': result['quadrant_easy'] if point_type == 'locate_at' else None
-                            })
+                        hard_question = f"""If I am standing by the {clean_standing} and facing the {clean_facing}, is the {clean_locate} to my front-left, front-right, back-left, or back-right? The directions refer to the quadrants of a Cartesian plane (if I am standing at the origin and facing along the positive y-axis)."""
+                        
+                        medium_question = f"""If I am standing by the {clean_standing} and facing the {clean_facing}, is the {clean_locate} to my left, right, or back? An object is to my back if I would have to turn at least 135 degrees in order to face it."""
+                        
+                        easy_question = f"""If I am standing by the {clean_standing} and facing the {clean_facing}, is the {clean_locate} to the left or the right of the stove?"""
+                        
+                        # Combine all data into one row
+                        all_results.append({
+                            'Possibility': possibility_counter,
+                            'standing_at': standing_at,
+                            'standing_at_x': result['standing_at'][0],
+                            'standing_at_y': result['standing_at'][1],
+                            'facing_at': facing_at,
+                            'facing_at_x': result['facing_at'][0],
+                            'facing_at_y': result['facing_at'][1],
+                            'locate_at': locate_at,
+                            'locate_at_x': result['locate_at'][0],
+                            'locate_at_y': result['locate_at'][1],
+                            'QuadrantNumber': result['quadrant_num'],
+                            'QuestionHard': hard_question,
+                            'AnswerHard': result['quadrant'],
+                            'QuestionMedium': medium_question,
+                            'AnswerMedium': result['quadrant_medium'],
+                            'QuestionEasy': easy_question,
+                            'AnswerEasy': result['quadrant_easy']
+                        })
                         
                         possibility_counter += 1
                         
