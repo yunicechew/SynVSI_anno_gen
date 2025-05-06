@@ -129,11 +129,6 @@ def get_actor_bounds(actor):
     return [x_min, x_max, y_min, y_max, z_min, z_max]
 
 def main():
-<<<<<<< HEAD
-    # Read the CSV files
-    df_actors = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/ranked_unique_actor_anno.csv')
-    df_distances = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/m_absolute_distance_tool/output/absolute_distances_all.csv')
-=======
     # Determine the project root directory and script directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir) # This assumes the script is one level down from project root
@@ -145,7 +140,6 @@ def main():
     # Read the CSV files
     df_actors = pd.read_csv(actors_csv_path)
     df_distances = pd.read_csv(distances_csv_path)
->>>>>>> temp-branch
     
     # Get the specific pair from distances file
     pair = df_distances[df_distances['Possibility'] == POSSIBILITY_ID].iloc[0]

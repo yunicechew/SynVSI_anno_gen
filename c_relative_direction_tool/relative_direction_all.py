@@ -97,10 +97,6 @@ def main():
     3. Calculates relative directions for each combination
     4. Outputs results to CSV with questions and answers at three difficulty levels
     """
-<<<<<<< HEAD
-    # Load actor positions from CSV
-    df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/ranked_unique_actor_anno.csv')
-=======
     # Determine the project root directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir) # Assumes this script is in a subdirectory of the project root
@@ -108,7 +104,6 @@ def main():
     # Load actor positions from CSV using a relative path
     csv_path = os.path.join(project_root, '0_data_cleanup_tool', 'output', 'ranked_unique_actor_anno.csv')
     df = pd.read_csv(csv_path)
->>>>>>> temp-branch
     actor_names = df['ActorName'].unique()
     output_dir = ensure_output_directory()
     

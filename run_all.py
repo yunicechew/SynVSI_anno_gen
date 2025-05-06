@@ -2,14 +2,9 @@ import os
 import subprocess
 import sys
 
-<<<<<<< HEAD
-# Toggle flags for visualization scripts
-ENABLE_VISUALIZATIONS = False  # Set to False to skip all visualization scripts
-=======
 # Toggle flags for scripts
 ENABLE_VISUALIZATIONS = True  # Set to False to skip all visualization scripts
 ENABLE_FRAME_EXTRACTION = True  # Set to False to skip frame extraction script
->>>>>>> temp-branch
 
 def run_script(script_path):
     """Run a Python script and check for errors"""
@@ -29,20 +24,6 @@ def main():
     # Base directory
     base_dir = os.path.dirname(os.path.abspath(__file__))
     
-<<<<<<< HEAD
-    # Separate data processing and visualization scripts
-    data_scripts = [
-        "anno_cleanup_tool/anno_extraction.py",
-        "c_relative_direction_tool/relative_direction_all.py",
-        "m_absolute_distance_tool/absolute_distance_all.py",
-    ]
-    
-    visualization_scripts = [
-        "anno_cleanup_tool/2d_anno_visualization.py",
-        "anno_cleanup_tool/3d_anno_visualization.py",
-        "c_relative_direction_tool/relative_direction_visual.py",
-        "m_absolute_distance_tool/absolute_distance_visual.py"
-=======
     # Frame extraction script (optional)
     frame_extraction_script = "0_data_cleanup_tool/frame_extraction.py"
     
@@ -60,13 +41,10 @@ def main():
         "c_relative_direction_tool/relative_direction_visual.py",
         "m_absolute_distance_tool/absolute_distance_visual.py",
         "c_relative_distance_tool/relative_distance_visual.py"
->>>>>>> temp-branch
     ]
     
     print("Starting to run data processing scripts...")
     
-<<<<<<< HEAD
-=======
     # Run frame extraction script if enabled
     if ENABLE_FRAME_EXTRACTION:
         frame_extraction_path = os.path.join(base_dir, frame_extraction_script)
@@ -81,7 +59,6 @@ def main():
     else:
         print("\nSkipping frame extraction script (ENABLE_FRAME_EXTRACTION is False)")
     
->>>>>>> temp-branch
     # Run data processing scripts
     for script in data_scripts:
         script_path = os.path.join(base_dir, script)

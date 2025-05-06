@@ -6,11 +6,6 @@ import pandas as pd
 import shutil
 
 # Configuration variables
-<<<<<<< HEAD
-ANNOTATION_DIR = "/Users/bytedance/Desktop/SynVSI_anno_gen/0_original_ue_anno/20250427-120232/annotation"
-ORIGINAL_DIR = "/Users/bytedance/Desktop/SynVSI_anno_gen/0_original_ue_anno/20250427-120232/original"
-SUMMARY_CSV = "/Users/bytedance/Desktop/SynVSI_anno_gen/0_original_ue_anno/20250427-120232/Screenshot_summary.csv"
-=======
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)  # Navigates up from 0_data_cleanup_tool to SynVSI_anno_gen
 
@@ -24,7 +19,6 @@ INPUT_DATA_ROOT = os.path.join(project_root, "0_original_ue_anno", DATA_SUBDIREC
 ANNOTATION_DIR = os.path.join(INPUT_DATA_ROOT, "annotation")
 ORIGINAL_DIR = os.path.join(INPUT_DATA_ROOT, "original")
 SUMMARY_CSV = os.path.join(INPUT_DATA_ROOT, "Screenshot_summary.csv")
->>>>>>> temp-branch
 VIDEO_DURATION = 60  # Duration in seconds
 FPS = 2  # Frames per second
 TOTAL_FRAMES = VIDEO_DURATION * FPS  # Total frames to extract (120 frames)
@@ -135,12 +129,8 @@ def save_frame_metadata(frame_metadata, output_csv_path):
 
 def main():
     # Create output directory if it doesn't exist
-<<<<<<< HEAD
-    output_dir = "0_data_cleanup_tool/output"
-=======
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_dir = os.path.join(script_dir, "output") # New path relative to this script
->>>>>>> temp-branch
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
