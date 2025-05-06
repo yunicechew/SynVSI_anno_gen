@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 import os
 
 # Configuration variables
+<<<<<<< HEAD
 POSSIBILITY_ID = 30  # Change this to visualize different combinations
+=======
+POSSIBILITY_ID = 1  # Change this to visualize different combinations
+>>>>>>> temp-branch
 
 def visualize_result(result_data, standing_at_name, facing_at_name, locate_at_name):
     plt.figure(figsize=(10, 10))
@@ -112,7 +116,7 @@ def main():
     # Generate visualization
     visualize_result(result_data, standing_at_name, facing_at_name, locate_at_name)
     
-    print(f"Visualizing possibility {possibility_id}:")
+    print(f"Visualizing possibility {POSSIBILITY_ID}:") 
     print(f"Standing at: {standing_at_name}")
     print(f"Facing at: {facing_at_name}")
     print(f"Locating: {locate_at_name}")

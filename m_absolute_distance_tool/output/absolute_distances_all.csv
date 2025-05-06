@@ -1,0 +1,21 @@
+Possibility,Actor1,Actor2,Question,Answer
+1,SM_To_toilet_shelf4_125_SM_To_toilet_shelf,SM_To_basket8_SM_To_basket,"Measuring from the closest point of each object, what is the distance between the toilet shelf and the basket (in meters)?",0.0
+2,SM_To_toilet_shelf4_125_SM_To_toilet_shelf,BP_To_showercurtain4_2_SM_To_showercurtain,"Measuring from the closest point of each object, what is the distance between the toilet shelf and the showercurtain (in meters)?",1.35
+3,SM_To_toilet_shelf4_125_SM_To_toilet_shelf,BP_To_toilet4_2_SM_To_toilet,"Measuring from the closest point of each object, what is the distance between the toilet shelf and the toilet (in meters)?",1.7
+4,SM_To_toilet_shelf4_125_SM_To_toilet_shelf,BP_To_sink5_2_SM_To_sink,"Measuring from the closest point of each object, what is the distance between the toilet shelf and the sink (in meters)?",2.33
+5,SM_To_basket8_SM_To_basket,SM_To_toilet_shelf4_125_SM_To_toilet_shelf,"Measuring from the closest point of each object, what is the distance between the basket and the toilet shelf (in meters)?",0.0
+6,SM_To_basket8_SM_To_basket,BP_To_showercurtain4_2_SM_To_showercurtain,"Measuring from the closest point of each object, what is the distance between the basket and the showercurtain (in meters)?",1.44
+7,SM_To_basket8_SM_To_basket,BP_To_toilet4_2_SM_To_toilet,"Measuring from the closest point of each object, what is the distance between the basket and the toilet (in meters)?",1.78
+8,SM_To_basket8_SM_To_basket,BP_To_sink5_2_SM_To_sink,"Measuring from the closest point of each object, what is the distance between the basket and the sink (in meters)?",2.51
+9,BP_To_showercurtain4_2_SM_To_showercurtain,SM_To_toilet_shelf4_125_SM_To_toilet_shelf,"Measuring from the closest point of each object, what is the distance between the showercurtain and the toilet shelf (in meters)?",1.35
+10,BP_To_showercurtain4_2_SM_To_showercurtain,SM_To_basket8_SM_To_basket,"Measuring from the closest point of each object, what is the distance between the showercurtain and the basket (in meters)?",1.44
+11,BP_To_showercurtain4_2_SM_To_showercurtain,BP_To_toilet4_2_SM_To_toilet,"Measuring from the closest point of each object, what is the distance between the showercurtain and the toilet (in meters)?",1.66
+12,BP_To_showercurtain4_2_SM_To_showercurtain,BP_To_sink5_2_SM_To_sink,"Measuring from the closest point of each object, what is the distance between the showercurtain and the sink (in meters)?",3.54
+13,BP_To_toilet4_2_SM_To_toilet,SM_To_toilet_shelf4_125_SM_To_toilet_shelf,"Measuring from the closest point of each object, what is the distance between the toilet and the toilet shelf (in meters)?",1.7
+14,BP_To_toilet4_2_SM_To_toilet,SM_To_basket8_SM_To_basket,"Measuring from the closest point of each object, what is the distance between the toilet and the basket (in meters)?",1.78
+15,BP_To_toilet4_2_SM_To_toilet,BP_To_showercurtain4_2_SM_To_showercurtain,"Measuring from the closest point of each object, what is the distance between the toilet and the showercurtain (in meters)?",1.66
+16,BP_To_toilet4_2_SM_To_toilet,BP_To_sink5_2_SM_To_sink,"Measuring from the closest point of each object, what is the distance between the toilet and the sink (in meters)?",1.53
+17,BP_To_sink5_2_SM_To_sink,SM_To_toilet_shelf4_125_SM_To_toilet_shelf,"Measuring from the closest point of each object, what is the distance between the sink and the toilet shelf (in meters)?",2.33
+18,BP_To_sink5_2_SM_To_sink,SM_To_basket8_SM_To_basket,"Measuring from the closest point of each object, what is the distance between the sink and the basket (in meters)?",2.51
+19,BP_To_sink5_2_SM_To_sink,BP_To_showercurtain4_2_SM_To_showercurtain,"Measuring from the closest point of each object, what is the distance between the sink and the showercurtain (in meters)?",3.54
+20,BP_To_sink5_2_SM_To_sink,BP_To_toilet4_2_SM_To_toilet,"Measuring from the closest point of each object, what is the distance between the sink and the toilet (in meters)?",1.53
