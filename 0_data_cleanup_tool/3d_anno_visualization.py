@@ -3,9 +3,17 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
+import os # Add os import
+
+# Determine the script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct relative paths
+actors_csv_path = os.path.join(script_dir, 'output', 'ranked_unique_actor_anno.csv')
+output_visualization_path = os.path.join(script_dir, 'output', '3d_anno_visualization.png')
 
 # Read the CSV file
-df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/ranked_unique_actor_anno.csv')
+df = pd.read_csv(actors_csv_path)
 
 # Create the figure and 3D axis
 fig = plt.figure(figsize=(15, 10))
@@ -79,5 +87,5 @@ ax.grid(True)
 ax.view_init(elev=30, azim=45)
 
 # Save the plot
-plt.savefig('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/3d_anno_visualization.png', dpi=300, bbox_inches='tight')
+plt.savefig(output_visualization_path, dpi=300, bbox_inches='tight')
 plt.show()

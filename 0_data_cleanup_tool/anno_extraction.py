@@ -2,7 +2,9 @@ import pandas as pd
 import os
 
 # Configuration variables
-INPUT_CSV = "/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/frame_extract_meta.csv"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+INPUT_CSV = os.path.join(script_dir, "output", "frame_extract_meta.csv")
+
 MIN_FRAME_COUNT = 10  # Minimum number of frames an actor must appear in
 MIN_VOLUME = 0.005    # Minimum volume in cubic meters
 
@@ -77,7 +79,7 @@ def extract_ranked_actor_info(min_frame_count=MIN_FRAME_COUNT, min_volume=MIN_VO
     merged_info = merged_info[column_order]
 
     # Create output directory if it doesn't exist
-    output_dir = "0_data_cleanup_tool/output"
+    output_dir = os.path.join(script_dir, "output") # New path relative to this script
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 

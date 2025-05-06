@@ -1,9 +1,18 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+import os # Add os import
+
+# Determine the script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct relative paths
+input_csv_path = os.path.join(script_dir, 'output', 'ranked_unique_actor_anno.csv')
+output_visualization_path = os.path.join(script_dir, 'output', '2d_anno_visualization.png')
 
 # Read the CSV file
-df = pd.read_csv('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/ranked_unique_actor_anno.csv')
+df = pd.read_csv(input_csv_path)
+
 
 # Create the figure and axis
 plt.figure(figsize=(12, 8))
@@ -48,5 +57,5 @@ plt.axis('equal')  # Set equal aspect ratio
 plt.tight_layout()
 
 # Save the plot
-plt.savefig('/Users/bytedance/Desktop/SynVSI_anno_gen/0_data_cleanup_tool/output/2d_anno_visualization.png', dpi=300, bbox_inches='tight')
+plt.savefig(output_visualization_path, dpi=300, bbox_inches='tight')
 plt.show()
