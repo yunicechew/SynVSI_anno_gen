@@ -71,11 +71,46 @@ def extract_ranked_actor_info(min_frame_count=MIN_FRAME_COUNT, min_volume=MIN_VO
     merged_info = pd.merge(first_appearance, actor_info, on=['ActorName', 'ActorClass'])
     # Add frame count information
     merged_info = pd.merge(merged_info, qualified_actors[['ActorName', 'FrameCount']], on='ActorName')
+    
+    # Extract camera information for each actor's first appearance frame
+    camera_columns = ['CamX', 'CamY', 'CamZ', 'CamPitch', 'CamYaw', 'CamRoll']
+    
+    # Create a dictionary to store camera data for each actor
+    camera_data = {}
+    
+    # For each actor, get the camera data from its first appearance frame
+    for _, row in merged_info.iterrows():
+        actor_name = row['ActorName']
+        first_frame = row['FirstFrame']
+        
+        # Get the camera data from the first frame this actor appears in
+        frame_data = df[(df['ActorName'] == actor_name) & (df['FrameNumber'] == first_frame)]
+        
+        if not frame_data.empty and all(col in frame_data.columns for col in camera_columns):
+            camera_row = frame_data.iloc[0]
+            camera_data[actor_name] = {
+                'CamX': camera_row['CamX'] / 100.0,  # Convert to meters
+                'CamY': camera_row['CamY'] / 100.0,
+                'CamZ': camera_row['CamZ'] / 100.0,
+                'CamPitch': camera_row['CamPitch'],
+                'CamYaw': camera_row['CamYaw'],
+                'CamRoll': camera_row['CamRoll']
+            }
+        else:
+            # If camera data is missing, use NaN values
+            camera_data[actor_name] = {col: float('nan') for col in camera_columns}
+    
+    # Add camera data to the merged info dataframe
+    for col in camera_columns:
+        merged_info[col] = merged_info['ActorName'].apply(lambda x: camera_data[x][col])
+    
+    # Sort by first appearance
     merged_info = merged_info.sort_values('FirstFrame')
     
-    # Ensure column order with FirstFrame, FrameCount and Volume
+    # Ensure column order with FirstFrame, FrameCount, Volume and Camera data
     column_order = ['FirstFrame', 'FrameCount', 'ActorName', 'CleanedActorName', 'ActorClass', 
-                    'WorldX', 'WorldY', 'WorldZ', 'WorldSizeX', 'WorldSizeY', 'WorldSizeZ', 'Volume']
+                    'WorldX', 'WorldY', 'WorldZ', 'WorldSizeX', 'WorldSizeY', 'WorldSizeZ', 'Volume',
+                    'CamX', 'CamY', 'CamZ', 'CamPitch', 'CamYaw', 'CamRoll']
     merged_info = merged_info[column_order]
 
     # Create output directory if it doesn't exist
@@ -92,6 +127,7 @@ def extract_ranked_actor_info(min_frame_count=MIN_FRAME_COUNT, min_volume=MIN_VO
     print(f"1. Appear in {min_frame_count} or more frames")
     print(f"2. Have a volume greater than {min_volume} cubic meters")
     print("Note: All world coordinates and sizes have been converted from centimeters to meters")
+    print("Note: Camera position data (CamX, CamY, CamZ) has also been converted to meters")
 
 if __name__ == "__main__":
     extract_ranked_actor_info()  # Using default values from configuration variables

@@ -4,7 +4,7 @@ import sys
 
 # Toggle flags for scripts
 ENABLE_VISUALIZATIONS = True  # Set to False to skip all visualization scripts
-ENABLE_FRAME_EXTRACTION = True  # Set to False to skip frame extraction script
+ENABLE_FRAME_EXTRACTION = False  # Set to False to skip frame extraction script
 
 def run_script(script_path):
     """Run a Python script and check for errors"""
@@ -32,7 +32,9 @@ def main():
         "0_data_cleanup_tool/anno_extraction.py",
         "c_relative_direction_tool/relative_direction_all.py",
         "m_absolute_distance_tool/absolute_distance_all.py",
-        "c_relative_distance_tool/relative_distance_all.py"
+        "c_relative_distance_tool/relative_distance_all.py",
+        "m_object_size_tool/object_size_all.py",
+        "s_appearance_order_tool/appearance_order_all.py"
     ]
     
     visualization_scripts = [
@@ -40,7 +42,9 @@ def main():
         "0_data_cleanup_tool/3d_anno_visualization.py",
         "c_relative_direction_tool/relative_direction_visual.py",
         "m_absolute_distance_tool/absolute_distance_visual.py",
-        "c_relative_distance_tool/relative_distance_visual.py"
+        "c_relative_distance_tool/relative_distance_visual.py",
+        "m_object_size_tool/object_size_visual.py",
+        "s_appearance_order_tool/appearance_order_visual.py"
     ]
     
     print("Starting to run data processing scripts...")

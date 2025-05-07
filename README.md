@@ -6,8 +6,10 @@ Tools for processing, analyzing, and visualizing 3D spatial annotation data. Ext
 
 -   **Data Processing**: Cleans and standardizes spatial data.
 -   **Absolute Distance**: Calculates distances between object pairs.
+-   **Object Size Analysis**: Measures dimensions of objects (e.g., longest dimension).
 -   **Relative Direction**: Determines directional relationships (e.g., object A is to the left of object B from C's view).
 -   **Relative Distance**: Finds the closest object to a primary one from a set of options.
+-   **Appearance Order Analysis**: Determines the sequence in which objects appear.
 -   **Q&A Generation**: Creates questions and answers for spatial reasoning.
 -   **Visualization**: Offers 2D and 3D views of objects and relationships.
 
@@ -15,8 +17,10 @@ Tools for processing, analyzing, and visualizing 3D spatial annotation data. Ext
 
 -   `0_data_cleanup_tool/`: Initial data processing and visualization.
 -   `m_absolute_distance_tool/`: Absolute distance calculations and visuals.
+-   `m_object_size_tool/`: Object size calculations and visuals.
 -   `c_relative_direction_tool/`: Relative direction analysis and visuals.
 -   `c_relative_distance_tool/`: Relative distance comparisons and visuals.
+-   `s_appearance_order_tool/`: Appearance order analysis and visuals.
 -   `run_all.py`: Script to run the entire pipeline (verify its specific use).
 
 Each tool directory has an `output/` folder for generated CSVs and images.
@@ -75,6 +79,30 @@ Each tool directory has an `output/` folder for generated CSVs and images.
     -   `relative_distance_all.csv`: Relative distance comparison data and Q&A.
     -   `relative_distance_visual.png`: 3D visualization for a specific scenario.
 
+### 5. Object Size Analysis (`m_object_size_tool/`)
+
+-   **Functionality**: Calculates the size of objects (e.g., longest dimension, volume) and generates related Q&A.
+-   **Key Scripts**:
+    -   `object_size_all.py`: Computes object sizes and generates Q&A.
+    -   `object_size_visual.py`: Visualizes a selected object and its dimensions (set `POSSIBILITY_ID` in script).
+-   **Inputs**:
+    -   `0_data_cleanup_tool/output/ranked_unique_actor_anno.csv`
+-   **Outputs** (in `m_object_size_tool/output/`):
+    -   `object_size_all.csv`: Calculated object sizes and Q&A.
+    -   `object_size_visual.png`: 3D visualization for a specific object's size.
+
+### 6. Appearance Order Analysis (`s_appearance_order_tool/`)
+
+-   **Functionality**: Determines the order in which objects appear based on their first frame of appearance and generates Q&A about this sequence.
+-   **Key Scripts**:
+    -   `appearance_order_all.py`: Determines appearance order and generates Q&A.
+    -   `appearance_order_visual.py`: Visualizes the timeline or sequence of object appearances (specific visualization will depend on script's implementation, set `POSSIBILITY_ID` if applicable).
+-   **Inputs**:
+    -   `0_data_cleanup_tool/output/ranked_unique_actor_anno.csv`
+-   **Outputs** (in `s_appearance_order_tool/output/`):
+    -   `appearance_order_all.csv`: Object appearance order data and Q&A.
+    -   `appearance_order_visual.png` (if visualizer run and produces an image).
+
 ## Getting Started
 
 ### Prerequisites
@@ -92,13 +120,13 @@ Each tool directory has an `output/` folder for generated CSVs and images.
 
 ### Running the Tools
 
-1.  **Input Data**: Place initial data (e.g., `frame_extract_meta.csv`) in `0_data_cleanup_tool/output/` or as configured.
+1.  **Input Data**: Place initial data (e.g., `frame_extract_meta.csv`) in `0_data_cleanup_tool/output/` or as configured. Ensure `0_original_ue_anno/` contains the raw UE output if running `frame_extraction.py`.
 2.  **File Paths**: Scripts use relative paths for portability.
 3.  **Execution Order**:
-    -   Run `0_data_cleanup_tool/` scripts first (e.g., `anno_extraction.py`).
-    -   Then, `m_absolute_distance_tool/` scripts (e.g., `absolute_distance_all.py`).
-    -   Finally, `c_relative_direction_tool/` and `c_relative_distance_tool/` scripts.
-    -   Check `run_all.py` for automated execution.
+    -   Run `0_data_cleanup_tool/` scripts first (e.g., `frame_extraction.py` if needed, then `anno_extraction.py`).
+    -   Then, measurement tools like `m_absolute_distance_tool/` (e.g., `absolute_distance_all.py`) and `m_object_size_tool/` (e.g., `object_size_all.py`).
+    -   Finally, comparative and sequential tools like `c_relative_direction_tool/`, `c_relative_distance_tool/`, and `s_appearance_order_tool/` scripts.
+    -   Check `run_all.py` for automated execution (it may need updates to include all new tools).
 4.  **Running Individual Scripts**:
     Navigate to the script's directory and run:
     ```bash
