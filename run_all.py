@@ -34,26 +34,25 @@ def main():
         "0_data_cleanup_tool/actor_visual_description.py",
     ]
     
-    measurement_scripts = [
+    # Merged list of main processing scripts
+    main_processing_scripts = [
+        # Measurement scripts
         "m_absolute_distance_tool/absolute_distance_all.py",
         "m_object_size_tool/object_size_all.py",
-    ]
-    
-    comparative_scripts = [
+        "m_room_size_tool/room_size_all.py",
+        # Configuration scripts
         "c_relative_direction_tool/relative_direction_all.py",
         "c_relative_distance_tool/relative_distance_all.py",
-    ]
-    
-    sequential_scripts = [
+        "c_object_count_tool/object_count_all.py",
+        # Spatiotemporal scripts
         "s_appearance_order_tool/appearance_order_all.py"
     ]
     
     # Combine all data processing scripts in execution order
     data_scripts = (
         data_cleanup_scripts +
-        measurement_scripts +
-        comparative_scripts +
-        sequential_scripts
+        main_processing_scripts + # Use the new merged list
+        ["0_infer_and_score/qa_all.py"] # Add qa_all.py to the end of data processing
     )
     
     visualization_scripts = [
@@ -63,16 +62,15 @@ def main():
         # Measurement visualizations
         "m_absolute_distance_tool/absolute_distance_visual.py",
         "m_object_size_tool/object_size_visual.py",
-        # Comparative visualizations
+        # Configuration visualizations # Updated comment
         "c_relative_direction_tool/relative_direction_visual.py",
         "c_relative_distance_tool/relative_distance_visual.py",
-        # Sequential visualizations
+        # Spatiotemporal visualizations # Updated comment
         "s_appearance_order_tool/appearance_order_visual.py"
     ]
     
     inference_scripts = [
-        "0_infer_and_score/qa_all.py",
-        "0_infer_and_score/infer_all.py"
+        "0_infer_and_score/infer_all.py" # Only infer_all.py remains for dedicated inference step
     ]
     
     print("Starting to run data processing scripts...")

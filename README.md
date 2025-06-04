@@ -6,15 +6,17 @@ This project, SynVSI Annotation Toolkit, is designed to transform raw 3D spatial
 
 The generation of these Q&A pairs is guided by a taxonomy derived from the VSI-Bench benchmark, focusing on spatial and spatiotemporal understanding. This taxonomy categorizes visual-spatial inquiries into several key areas:
 
-*   **Configuration**: Understanding the spatial arrangement of objects, including:
-    *   Relative Direction
-    *   Relative Distance
-    *   Object Count
-*   **Measurement**: Quantifying attributes of objects and spaces, such as:
-    *   Object Size
-    *   Absolute Distance
-*   **Spatiotemporal**: Analyzing events and object states over time, for instance:
-    *   Appearance Order
+*   **Configuration (47.6%)**: Understanding the spatial arrangement of objects, including:
+    *   Relative Direction (18.9%)
+    *   Relative Distance (13.8%)
+    *   Object Count (11.1%)
+    *   Route Plan (3.8%)
+*   **Measurement (40.3%)**: Quantifying attributes of objects and spaces, such as:
+    *   Object Size (18.5%)
+    *   Room Size (5.6%)
+    *   Absolute Distance (16.2%)
+*   **Spatiotemporal (12.1%)**: Analyzing events and object states over time, for instance:
+    *   Appearance Order (12.1%)
 
 This toolkit provides a suite of scripts to process raw data, extract relevant spatial and temporal information, generate corresponding questions and answers based on the VSI-Bench taxonomy, and optionally visualize the scenarios.
 
@@ -24,11 +26,12 @@ This toolkit provides a suite of scripts to process raw data, extract relevant s
 -   `0_data_cleanup_tool/`: Initial data processing, enrichment, and visualization.
 -   `m_absolute_distance_tool/`: Absolute distance calculations and visuals.
 -   `m_object_size_tool/`: Object size calculations and visuals.
+-   `m_room_size_tool/`: Room size calculations and Q&A generation.
 -   `c_object_count_tool/`: Object counting and Q&A generation.
 -   `c_relative_direction_tool/`: Relative direction analysis and visuals.
 -   `c_relative_distance_tool/`: Relative distance comparisons and visuals.
 -   `s_appearance_order_tool/`: Appearance order analysis and visuals.
--   `0_infer_and_score/`: Q&A consolidation, inference, and scoring.
+-   `0_infer_and_score/`: Placeholder for Q&A consolidation, inference, and scoring.
 -   `run_all.py`: Script to run the entire pipeline.
 
 Each tool directory typically has an `output/` folder for generated CSVs and images.
@@ -39,19 +42,17 @@ The toolkit is organized into several modules, each targeting specific aspects o
 
 ### 1. Data Cleanup & Extraction (`0_data_cleanup_tool/`)
 
--   **Functionality**: Processes raw frame data, cleans names, filters objects, converts units, ranks objects, and generates visual descriptions.
+-   **Functionality**: Processes raw frame data, cleans names, filters objects, converts units, and ranks objects.
 -   **Key Scripts**:
     -   `anno_extraction.py`: Cleans, filters, converts units, and ranks unique actors.
-    -   `actor_visual_description.py`: Generates textual descriptions for actors (e.g., based on class or other properties).
     -   `2d_anno_visualization.py`: Generates 2D top-down visualizations of actor distributions.
     -   `3d_anno_visualization.py`: Generates 3D visualizations of actor distributions.
-    -   *(Optional)* `frame_extraction.py`: Extracts and processes raw frame metadata from UE output (if available in `0_original_ue_anno/`).
+    -   *(Optional)* `../0_original_ue_anno/frame_extraction.py`: Extracts and processes raw frame metadata from UE output (if available in `0_original_ue_anno/`).
 -   **Inputs**:
     -   Raw UE output (e.g., `Screenshot_summary.csv`) for `anno_extraction.py`.
-    -   `0_data_cleanup_tool/output/ranked_unique_actor_anno.csv` for visualizers and `actor_visual_description.py`.
+    -   `0_data_cleanup_tool/output/ranked_unique_actor_anno.csv` for visualizers.
 -   **Outputs** (in `0_data_cleanup_tool/output/`):
     -   `ranked_unique_actor_anno.csv`: Cleaned and ranked actor metadata.
-    -   `actor_visual_descriptions.csv` (or similar): Textual descriptions of actors.
     -   `2d_anno_visualization.png`: 2D actor distribution plot.
     -   `3d_anno_visualization.png`: 3D actor distribution plot.
 
@@ -79,7 +80,17 @@ The toolkit is organized into several modules, each targeting specific aspects o
     -   `object_size_all.csv`: Calculated object sizes and Q&A.
     -   `object_size_visual.png` (if visualizer run).
 
-### 4. Object Count Analysis (`c_object_count_tool/`)
+### 4. Room Size Analysis (`m_room_size_tool/`)
+
+-   **Functionality**: Extracts room dimensions from JSON data, calculates room area, and generates Q&A about room size.
+-   **Key Scripts**:
+    -   `room_size_all.py`: Extracts room dimensions, calculates area, and generates Q&A.
+-   **Inputs**:
+    -   JSON file containing room boundary data (e.g., `result_Actor_BP_HDAGenenrator_C_UAID_*.json` from `0_original_ue_anno/`).
+-   **Outputs** (in `m_room_size_tool/output/`):
+    -   `room_size_all.csv`: Room dimensions, area, and Q&A.
+
+### 5. Object Count Analysis (`c_object_count_tool/`)
 
 -   **Functionality**: Counts objects based on specified criteria (e.g., type, location) and generates related Q&A.
 -   **Key Scripts**:
@@ -90,7 +101,7 @@ The toolkit is organized into several modules, each targeting specific aspects o
     -   `object_count_all.csv`: Object counts and Q&A.
     -   *(Visualization script might be added here if developed)*
 
-### 5. Relative Direction Analysis (`c_relative_direction_tool/`)
+### 6. Relative Direction Analysis (`c_relative_direction_tool/`)
 
 -   **Functionality**: Determines relative direction of an object from an observer's viewpoint (standing at one object, facing another) and generates Q&A.
 -   **Key Scripts**:
@@ -102,7 +113,7 @@ The toolkit is organized into several modules, each targeting specific aspects o
     -   `relative_direction_all.csv`: Relative direction data, actors, and Q&A.
     -   `relative_direction_visual.png` (if visualizer run).
 
-### 6. Relative Distance Analysis (`c_relative_distance_tool/`)
+### 7. Relative Distance Analysis (`c_relative_distance_tool/`)
 
 -   **Functionality**: For a primary object and several options, identifies the closest option object and generates Q&A.
 -   **Key Scripts**:
@@ -115,7 +126,7 @@ The toolkit is organized into several modules, each targeting specific aspects o
     -   `relative_distance_all.csv`: Relative distance comparison data and Q&A.
     -   `relative_distance_visual.png` (if visualizer run).
 
-### 7. Appearance Order Analysis (`s_appearance_order_tool/`)
+### 8. Appearance Order Analysis (`s_appearance_order_tool/`)
 
 -   **Functionality**: Determines the order in which objects appear based on their first frame of appearance and generates Q&A about this sequence.
 -   **Key Scripts**:
@@ -127,10 +138,10 @@ The toolkit is organized into several modules, each targeting specific aspects o
     -   `appearance_order_all.csv`: Object appearance order data and Q&A.
     -   `appearance_order_visual.png` (if visualizer run).
 
-### 8. Inference and Scoring (`0_infer_and_score/`)
+### 9. Inference and Scoring (`0_infer_and_score/`)
 
--   **Functionality**: Consolidates Q&A from all generation tools, runs them through an inference model, and scores the results.
--   **Key Scripts**:
+-   **Functionality**: (Planned) Consolidates Q&A from all generation tools, runs them through an inference model, and scores the results.
+-   **Key Scripts**: (Planned)
     -   `qa_all.py`: Gathers and consolidates Q&A from various `_all.csv` files into a unified format.
     -   `infer_all.py`: Takes the consolidated Q&A, runs inference (e.g., using a pre-trained model), and saves results with scores.
 -   **Inputs**:
@@ -141,12 +152,11 @@ The toolkit is organized into several modules, each targeting specific aspects o
     -   `inference_results.csv` (or similar): Inference outputs and scores.
 
 ## Getting Started
-
 ### Prerequisites
 
 -   Python 3.x
 -   Required Python packages: `pandas`, `numpy`, `matplotlib`.
--   Additional packages may be required for `0_infer_and_score/` (e.g., `transformers`, `torch`). Check specific script requirements.
+-   Additional packages may be required for `0_infer_and_score/` (e.g., `transformers`, `torch`) if implemented. Check specific script requirements.
 
 ### Installation
 
@@ -155,14 +165,14 @@ The toolkit is organized into several modules, each targeting specific aspects o
     ```bash
     pip install pandas numpy matplotlib
     ```
-3.  Install additional packages for inference if needed (refer to `0_infer_and_score/` script imports).
+3.  Install additional packages for inference if needed (refer to `0_infer_and_score/` script imports once implemented).
 
 ### Running the Tools
 
 1.  **Input Data**:
-    -   For initial processing with `0_data_cleanup_tool/anno_extraction.py`, ensure your raw data (e.g., `Screenshot_summary.csv` from UE) is correctly placed, typically in a subdirectory within `0_original_ue_anno/` and specify this subdirectory when running `anno_extraction.py` (e.g., via command-line argument).
-    -   If using the optional `0_data_cleanup_tool/frame_extraction.py`, ensure raw UE frame metadata is in `0_original_ue_anno/`.
-    -   Subsequent scripts generally consume outputs from previous stages, primarily `0_data_cleanup_tool/output/ranked_unique_actor_anno.csv`.
+    -   For initial processing with <mcfile name="anno_extraction.py" path="0_data_cleanup_tool/anno_extraction.py"></mcfile>, ensure your raw data (e.g., `Screenshot_summary.csv` from UE) is correctly placed, typically in a subdirectory within <mcfolder name="0_original_ue_anno" path="0_original_ue_anno/"></mcfolder> and specify this subdirectory when running <mcfile name="anno_extraction.py" path="0_data_cleanup_tool/anno_extraction.py"></mcfile> (e.g., via command-line argument).
+    -   If using the optional <mcfile name="frame_extraction.py" path="0_original_ue_anno/frame_extraction.py"></mcfile>, ensure raw UE frame metadata is in <mcfolder name="0_original_ue_anno" path="0_original_ue_anno/"></mcfolder>.
+    -   Subsequent scripts generally consume outputs from previous stages, primarily <mcfile name="ranked_unique_actor_anno.csv" path="0_data_cleanup_tool/output/ranked_unique_actor_anno.csv"></mcfile>.
 
 2.  **File Paths**: Scripts use relative paths for portability within the project structure.
 
