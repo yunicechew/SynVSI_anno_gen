@@ -74,15 +74,8 @@ def main():
         output_csv_path = os.path.join(output_dir, 'object_counts_all.csv')
         try:
             output_df.to_csv(output_csv_path, index=False)
-            print(f"Successfully processed and saved {len(all_results)} QA pairs to {output_csv_path}")
+            print(f"Successfully processed {len(all_results)} possibility")
 
-            # Print some examples
-            print("\nExample questions and answers:")
-            for i in range(min(5, len(all_results))):
-                result = all_results[i]
-                print(f"Q: {result['Question']}")
-                print(f"A: {result['Answer']}")
-                print()
         except Exception as e:
             print(f"Error writing output CSV to {output_csv_path}: {e}")
     else:

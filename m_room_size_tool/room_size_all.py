@@ -65,12 +65,7 @@ def main():
         output_csv_path = os.path.join(output_dir, 'room_size_all.csv')
         output_df = pd.DataFrame(all_results)
         output_df.to_csv(output_csv_path, index=False)
-        print(f"Successfully processed room size and saved QA pair to {output_csv_path}")
-
-        # Print example
-        print("\nExample question and answer:")
-        print(f"Q: {question}")
-        print(f"A: {answer} sq m")
+        print(f"Successfully processed room size")
 
     except json.JSONDecodeError as e:
         print(f"Error decoding JSON from {json_file_path}: {e}")

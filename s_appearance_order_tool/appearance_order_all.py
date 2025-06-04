@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import random
-from itertools import combinations
+from itertools import combinations, permutations # Import permutations
 
 def ensure_output_directory():
     """Create output directory if it doesn't exist"""
@@ -41,6 +41,19 @@ def main():
             # Sort actors by FirstFrame to determine appearance order
             actor_data.sort(key=lambda x: x['FirstFrame'])
             
+            # --- Ambiguity Check ---
+            is_ambiguous = False
+            for i in range(len(actor_data) - 1):
+                frame_diff = actor_data[i+1]['FirstFrame'] - actor_data[i]['FirstFrame']
+                if frame_diff < 10:
+                    is_ambiguous = True
+                    break
+            
+            if is_ambiguous:
+                # print(f"Skipping ambiguous combination {possibility_counter} due to close timestamps: {[ad['FirstFrame'] for ad in actor_data]}")
+                continue # Discard this combination
+            # --- End Ambiguity Check ---
+
             # Create randomized order for question (different from correct order)
             question_order = actor_data.copy()
             while question_order == actor_data:  # Ensure the order is different
@@ -50,8 +63,34 @@ def main():
             question_names = [actor['ShortActorName'] for actor in question_order]
             question = f"What will be the first-time appearance order of the following categories in the video: {', '.join(question_names)}?"
             
-            # Create answer with correct order
-            answer = f"{', '.join([actor['ShortActorName'] for actor in actor_data])}"
+            # Determine the correct answer sequence
+            correct_answer_sequence = [actor['ShortActorName'] for actor in actor_data]
+            correct_sequence_tuple = tuple(correct_answer_sequence) # Convert to tuple for comparison
+
+            # Generate all permutations of the names presented in the question
+            all_permutations_for_options = list(permutations(question_names))
+            
+            # Ensure the correct sequence is present in the generated permutations.
+            if correct_sequence_tuple not in all_permutations_for_options:
+                print(f"Warning: Correct sequence {correct_sequence_tuple} not found in permutations of question names {question_names}. Skipping combination.")
+                continue # Skip this combination if the correct answer cannot be formed from the question names.
+
+            # Remove the correct sequence from the list of all permutations to get incorrect options
+            incorrect_options_raw = [p for p in all_permutations_for_options if p != correct_sequence_tuple]
+            
+            # Select 3 random incorrect options. If fewer than 3 are available, take all available.
+            num_incorrect_to_select = min(3, len(incorrect_options_raw))
+            selected_incorrect_options = random.sample(incorrect_options_raw, num_incorrect_to_select)
+            
+            # Combine the correct option with the selected incorrect options
+            all_options_for_display = [correct_sequence_tuple] + selected_incorrect_options
+            random.shuffle(all_options_for_display) # Shuffle the order of options A, B, C, D
+            
+            # Format options as A., B., C., D.
+            formatted_options = [f"{chr(65+i)}. {', '.join(opt)}" for i, opt in enumerate(all_options_for_display)]
+            
+            # Determine the letter of the correct answer
+            correct_answer_letter = chr(65 + all_options_for_display.index(correct_sequence_tuple))
             
             # Record results
             all_results.append({
@@ -65,7 +104,8 @@ def main():
                 'Actor3_FirstFrame': df[df['ActorName'] == actor_combo[2]]['FirstFrame'].iloc[0],
                 'Actor4_FirstFrame': df[df['ActorName'] == actor_combo[3]]['FirstFrame'].iloc[0],
                 'Question': question,
-                'Answer': answer
+                'Answer': correct_answer_letter, # The letter (A, B, C, D)
+                'Options': formatted_options # The list of formatted options
             })
             
             possibility_counter += 1
@@ -79,7 +119,7 @@ def main():
     if all_results:
         output_df = pd.DataFrame(all_results)
         output_df.to_csv(os.path.join(output_dir, 'appearance_order_all.csv'), index=False)
-        print(f"Successfully processed {len(all_results)} combinations of 4 actors")
+        print(f"Successfully processed {len(all_results)} possibility")
 
 if __name__ == "__main__":
     main()

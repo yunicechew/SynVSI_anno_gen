@@ -8,8 +8,8 @@ project_root = os.path.dirname(script_dir)  # Navigate up to SynVSI_anno_gen
 
 # Default values
 DEFAULT_DATA_SUBDIRECTORY = "20250527-145925"
-MIN_FRAME_COUNT = 0 #20  # Minimum number of frames an actor must appear in
-MIN_VOLUME = 0 #0.005    # Minimum volume in cubic meters
+MIN_FRAME_COUNT = 10  # Minimum number of frames an actor must appear in
+MIN_VOLUME = 0.002    # Minimum volume in cubic meters
 
 # Input/Output paths
 INPUT_DATA_ROOT = os.path.join(project_root, "0_original_ue_anno")  # Path to original UE anno directory
@@ -116,12 +116,12 @@ def extract_ranked_actor_info(data_subdir=DEFAULT_DATA_SUBDIRECTORY, min_frame_c
     output_csv = os.path.join(OUTPUT_DATA_ROOT, "ranked_unique_actor_anno.csv")
     merged_info.to_csv(output_csv, index=False)
 
-    print(f"Ranked actor information has been saved to {output_csv}")
-    print(f"Only included actors that:")
+    # print(f"Ranked actor information has been saved to {output_csv}")
+    print(f"Unique actors:")
     print(f"1. Appear in {min_frame_count} or more frames")
     print(f"2. Have a volume greater than {min_volume} cubic meters")
-    print("Note: All world coordinates and sizes have been converted from centimeters to meters")
-    print("Note: Camera position data (CamX, CamY, CamZ) has also been converted to meters")
+    # print("Note: All world coordinates and sizes have been converted from centimeters to meters")
+    # print("Note: Camera position data (CamX, CamY, CamZ) has also been converted to meters")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Extract and rank actor information from Screenshot_summary.csv')

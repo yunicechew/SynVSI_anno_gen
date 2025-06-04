@@ -90,13 +90,5 @@ def main():
         output_df.to_csv(os.path.join(output_dir, 'object_size_all.csv'), index=False)
         print(f"Successfully processed {len(all_results)} actors")
         
-        # Print some examples
-        print("\nExample questions and answers:")
-        for i in range(min(5, len(all_results))):
-            result = all_results[i]
-            print(f"Q: {result['Question']}")
-            print(f"A: {result['Answer']} cm")
-            print()
-
 if __name__ == "__main__":
     main()

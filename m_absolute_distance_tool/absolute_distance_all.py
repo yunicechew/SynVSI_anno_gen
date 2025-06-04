@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+from itertools import combinations # Import combinations
 
 def calculate_min_distance(df, actor1_name, actor2_name):
     # Get data for both actors
@@ -67,40 +68,45 @@ def main():
     all_results = []
     possibility_counter = 1
     
-    for actor1 in actor_names:
-        for actor2 in actor_names:
-            # Skip when actors are the same
-            if actor1 != actor2:
-                try:
-                    # Calculate minimum distance
-                    distance = calculate_min_distance(df, actor1, actor2)
-                    
-                    # Get cleaned names from the DataFrame
-                    clean_actor1 = df[df['ActorName'] == actor1]['ShortActorName'].iloc[0]
-                    clean_actor2 = df[df['ActorName'] == actor2]['ShortActorName'].iloc[0]
-                    question = f"Measuring from the closest point of each object, what is the distance between the {clean_actor1} and the {clean_actor2} (in meters)?"
-                    
-                    # Record results with formatted distance (rounded to 2 decimal places)
-                    all_results.append({
-                        'Possibility': possibility_counter,
-                        'Actor1': actor1,
-                        'Actor2': actor2,
-                        'Question': question,
-                        'Answer': round(distance, 2)
-                    })
-                    
-                    possibility_counter += 1
-                    
-                except Exception as e:
-                    print(f"Error processing combination {possibility_counter}: {actor1}, {actor2}")
-                    print(f"Error message: {str(e)}")
-                    continue
+    # Use combinations to ensure order-independent pairs
+    for actor1, actor2 in combinations(actor_names, 2):
+        try:
+            # Calculate minimum distance
+            distance = calculate_min_distance(df, actor1, actor2)
+            
+            # Round the distance first
+            rounded_distance = round(distance, 2)
+            
+            # Skip if rounded distance is 0.0 (overlapping items)
+            if rounded_distance == 0.0:
+                continue
+            
+            # Get cleaned names from the DataFrame
+            clean_actor1 = df[df['ActorName'] == actor1]['ShortActorName'].iloc[0]
+            clean_actor2 = df[df['ActorName'] == actor2]['ShortActorName'].iloc[0]
+            question = f"Measuring from the closest point of each object, what is the distance between the {clean_actor1} and the {clean_actor2} (in meters)?"
+            
+            # Record results with the pre-rounded distance
+            all_results.append({
+                'Possibility': possibility_counter,
+                'Actor1': actor1,
+                'Actor2': actor2,
+                'Question': question,
+                'Answer': rounded_distance
+            })
+            
+            possibility_counter += 1
+            
+        except Exception as e:
+            print(f"Error processing combination {possibility_counter}: {actor1}, {actor2}")
+            print(f"Error message: {str(e)}")
+            continue
     
     # Save all results to CSV
     if all_results:
         output_df = pd.DataFrame(all_results)
         output_df.to_csv(os.path.join(output_dir, 'absolute_distances_all.csv'), index=False)
-        print(f"Successfully processed {len(all_results)} combinations")
+        print(f"Successfully processed {len(all_results)} possibility")
 
 if __name__ == "__main__":
     main()
