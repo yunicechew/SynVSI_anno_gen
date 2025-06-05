@@ -5,7 +5,7 @@ import os
 import ast # Import the ast module for safe parsing of string literals
 
 # Configuration variables
-POSSIBILITY_ID = 4  # Change this to visualize different combinations
+POSSIBILITY_ID = 1  # Change this to visualize different combinations
 
 def get_full_answer_string(answer_letter, options_str):
     """

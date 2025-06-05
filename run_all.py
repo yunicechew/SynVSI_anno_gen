@@ -3,8 +3,8 @@ import subprocess
 import sys
 
 # Toggle flags for scripts
-ENABLE_VISUALIZATIONS = True  # Set to False to skip all visualization scripts
-ENABLE_FRAME_EXTRACTION = True  # Set to False to skip frame extraction script
+ENABLE_VISUALIZATIONS = False  # Set to False to skip all visualization scripts
+ENABLE_FRAME_EXTRACTION = False  # Set to False to skip frame extraction script
 ENABLE_INFERENCE_SCRIPTS = False # Set to False to skip inference scripts
 
 def run_script(script_path):

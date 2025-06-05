@@ -24,6 +24,7 @@ This toolkit provides a suite of scripts to process raw data, extract relevant s
 
 -   `.gitignore`: Specifies intentionally untracked files that Git should ignore.
 -   `0_data_cleanup_tool/`: Initial data processing, enrichment, and visualization.
+-   `0_original_ue_anno/`: Stores original Unreal Engine annotation data and related processing scripts (e.g., frame extraction).
 -   `m_absolute_distance_tool/`: Absolute distance calculations and visuals.
 -   `m_object_size_tool/`: Object size calculations and visuals.
 -   `m_room_size_tool/`: Room size calculations and Q&A generation.
@@ -47,7 +48,7 @@ The toolkit is organized into several modules, each targeting specific aspects o
     -   `anno_extraction.py`: Cleans, filters, converts units, and ranks unique actors.
     -   `2d_anno_visualization.py`: Generates 2D top-down visualizations of actor distributions.
     -   `3d_anno_visualization.py`: Generates 3D visualizations of actor distributions.
-    -   *(Optional)* `../0_original_ue_anno/frame_extraction.py`: Extracts and processes raw frame metadata from UE output (if available in `0_original_ue_anno/`).
+    -   *(Optional)* `0_original_ue_anno/frame_extraction.py`: Extracts and processes raw frame metadata from UE output (if available in `0_original_ue_anno/`).
 -   **Inputs**:
     -   Raw UE output (e.g., `Screenshot_summary.csv`) for `anno_extraction.py`.
     -   `0_data_cleanup_tool/output/ranked_unique_actor_anno.csv` for visualizers.
