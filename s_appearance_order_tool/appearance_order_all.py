@@ -28,20 +28,22 @@ def main():
     # Generate all combinations of 4 actors (order doesn't matter)
     for actor_combo in combinations(actor_names, 4):
         try:
-            # Get the FirstFrame for each actor
+            # Get the FirstFrame and DisplayName for each actor
             actor_data = []
             for actor_name in actor_combo:
                 actor_row = df[df['ActorName'] == actor_name].iloc[0]
+                actor_desc = actor_row.get('ActorDescription')
+                display_name = actor_desc if pd.notna(actor_desc) and str(actor_desc).strip() else actor_row['ShortActorName']
                 actor_data.append({
                     'ActorName': actor_name,
-                    'ShortActorName': actor_row['ShortActorName'],
+                    'DisplayName': display_name, # Use DisplayName
                     'FirstFrame': int(actor_row['FirstFrame'])
                 })
             
             # Sort actors by FirstFrame to determine appearance order
             actor_data.sort(key=lambda x: x['FirstFrame'])
             
-            # --- Ambiguity Check ---
+        # --- Ambiguity Check ---
             is_ambiguous = False
             for i in range(len(actor_data) - 1):
                 frame_diff = actor_data[i+1]['FirstFrame'] - actor_data[i]['FirstFrame']
@@ -59,12 +61,12 @@ def main():
             while question_order == actor_data:  # Ensure the order is different
                 random.shuffle(question_order)
             
-            # Create question with randomized order
-            question_names = [actor['ShortActorName'] for actor in question_order]
+            # Create question with randomized order using DisplayName
+            question_names = [actor['DisplayName'] for actor in question_order]
             question = f"What will be the first-time appearance order of the following categories in the video: {', '.join(question_names)}?"
             
-            # Determine the correct answer sequence
-            correct_answer_sequence = [actor['ShortActorName'] for actor in actor_data]
+            # Determine the correct answer sequence using DisplayName
+            correct_answer_sequence = [actor['DisplayName'] for actor in actor_data]
             correct_sequence_tuple = tuple(correct_answer_sequence) # Convert to tuple for comparison
 
             # Generate all permutations of the names presented in the question

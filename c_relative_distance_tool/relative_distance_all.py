@@ -107,16 +107,20 @@ def generate_relative_distance_combinations(unique_objects_df, distance_dict, am
     #     print("--- Debug: No PrimaryObjects found with ShortActorName count > 1 ---")
     
     for primary_obj_actor_name in primary_object_candidates:
-        primary_obj_short_name = unique_objects_df[unique_objects_df['ActorName'] == primary_obj_actor_name]['ShortActorName'].iloc[0]
+        primary_obj_row = unique_objects_df[unique_objects_df['ActorName'] == primary_obj_actor_name].iloc[0]
+        primary_obj_desc = primary_obj_row.get('ActorDescription')
+        primary_obj_display_name = primary_obj_desc if pd.notna(primary_obj_desc) and str(primary_obj_desc).strip() else primary_obj_row['ShortActorName']
         
+        primary_obj_short_name_for_filtering = primary_obj_row['ShortActorName'] # Still use ShortActorName for filtering logic
+
         # Option ShortActorNames must be different from the primary object's ShortActorName
-        candidate_option_short_names = [s_name for s_name in all_available_short_names if s_name != primary_obj_short_name]
+        candidate_option_short_names = [s_name for s_name in all_available_short_names if s_name != primary_obj_short_name_for_filtering]
 
         if len(candidate_option_short_names) < 4:
             continue # Not enough unique option types to form a question
 
         for option_short_name_tuple in combinations(candidate_option_short_names, 4):
-            current_options_details = [] # To store (representative_actor_name, short_name, min_distance)
+            current_options_details = [] # To store (representative_actor_name, selected_option_short_name, min_distance)
 
             for selected_option_short_name in option_short_name_tuple:
                 instances_for_this_option_short_name = short_name_to_actor_names_map[selected_option_short_name]
@@ -140,7 +144,7 @@ def generate_relative_distance_combinations(unique_objects_df, distance_dict, am
 
             # Ensure all 4 options have a valid representative actor (not None)
             if len(current_options_details) != 4 or any(detail[0] is None for detail in current_options_details):
-                # print(f"Warning: Skipping combination for primary {primary_obj_short_name} due to missing representative for options: {option_short_name_tuple}")
+                # print(f"Warning: Skipping combination for primary {primary_obj_display_name} due to missing representative for options: {option_short_name_tuple}")
                 continue
             
             # Sort options by their minimum distance to the primary object
@@ -150,7 +154,7 @@ def generate_relative_distance_combinations(unique_objects_df, distance_dict, am
             # Check 1: If the closest option object is under the ambiguity_threshold (too close to primary)
             if current_options_details[0][2] < ambiguity_threshold:
                 # Optional: print a message for debugging
-                # print(f"Skipping (Closest option too near primary): Primary '{primary_obj_short_name}', Closest Option '{current_options_details[0][1]}' (dist: {current_options_details[0][2]:.2f}m) < threshold ({ambiguity_threshold}m)")
+                # print(f"Skipping (Closest option too near primary): Primary '{primary_obj_display_name}', Closest Option '{current_options_details[0][1]}' (dist: {current_options_details[0][2]:.2f}m) < threshold ({ambiguity_threshold}m)")
                 continue # Discard this possibility
             
             # Check 2: Original ambiguity check (difference between option distances)
@@ -163,39 +167,41 @@ def generate_relative_distance_combinations(unique_objects_df, distance_dict, am
                     break
             
             if is_ambiguous_between_options:
-                # print(f"Skipping (Ambiguous distances between options): Primary '{primary_obj_short_name}', Distances: {[round(d[2], 2) for d in current_options_details]}, Threshold: {ambiguity_threshold}m")
+                # print(f"Skipping (Ambiguous distances between options): Primary '{primary_obj_display_name}', Distances: {[round(d[2], 2) for d in current_options_details]}, Threshold: {ambiguity_threshold}m")
                 continue # Discard ambiguous question
             # --- End Ambiguity Checks ---
 
-            # Get the ShortActorName of the correct answer (closest object)
-            correct_answer_short_name = current_options_details[0][1]
-
-            # Get all option ShortActorNames that will be presented in the question
-            all_option_short_names_for_display = [detail[1] for detail in current_options_details]
+            # Generate display names for the four chosen options
+            # current_options_details contains (representative_actor_name, original_short_name_type, distance)
             
-            # Shuffle these display options
-            shuffled_display_options_short_names = random.sample(all_option_short_names_for_display, len(all_option_short_names_for_display))
+            options_display_names_ordered_by_closeness = []
+            for rep_actor_name_for_option, _, _ in current_options_details:
+                option_row = unique_objects_df[unique_objects_df['ActorName'] == rep_actor_name_for_option].iloc[0]
+                option_desc = option_row.get('ActorDescription')
+                display_name_for_option = option_desc if pd.notna(option_desc) and str(option_desc).strip() else option_row['ShortActorName']
+                options_display_names_ordered_by_closeness.append(display_name_for_option)
+
+            correct_answer_display_name = options_display_names_ordered_by_closeness[0]
+            
+            # Shuffle these display names for the question options
+            shuffled_display_options_names = random.sample(options_display_names_ordered_by_closeness, len(options_display_names_ordered_by_closeness))
             
             # Format options as A., B., C., D.
-            formatted_options = [f"{chr(65+i)}. {opt}" for i, opt in enumerate(shuffled_display_options_short_names)]
+            formatted_options = [f"{chr(65+i)}. {opt}" for i, opt in enumerate(shuffled_display_options_names)]
             
             # Determine the answer letter
             answer_letter = ""
             try:
-                answer_letter = chr(65 + shuffled_display_options_short_names.index(correct_answer_short_name))
+                answer_letter = chr(65 + shuffled_display_options_names.index(correct_answer_display_name))
             except ValueError:
-                # This should ideally not happen if correct_answer_short_name is always in all_option_short_names
-                print(f"Warning: Correct answer '{correct_answer_short_name}' not found in shuffled options for primary {primary_obj_short_name}. Options: {shuffled_display_options_short_names}")
-                continue # Skip this possibility if answer cannot be found
+                print(f"Warning: Correct answer display name '{correct_answer_display_name}' not found in shuffled options for primary {primary_obj_display_name}. Options: {shuffled_display_options_names}")
+                continue 
 
-            # The question will list the options
-            # Extract just the names for the question string: "objectA, objectB, objectC, or objectD"
-            option_names_for_question_text = [opt.split('. ')[1] for opt in formatted_options]
-            question = f"Measuring from the closest point of each object, which of these objects ({', '.join(option_names_for_question_text[:-1])}, or {option_names_for_question_text[-1]}) is the closest to the {primary_obj_short_name}?"
+            question = f"Measuring from the closest point of each object, which of these objects ({', '.join(shuffled_display_options_names[:-1])}, or {shuffled_display_options_names[-1]}) is the closest to the {primary_obj_display_name}?"
             
             result = {
                 'Possibility': possibility_counter,
-                'PrimaryObject': primary_obj_actor_name, # Actual ActorName of the primary
+                'PrimaryObject': primary_obj_actor_name, 
                 'OptionObject1': current_options_details[0][0], # Representative ActorName for option 1 (closest)
                 'OptionObject2': current_options_details[1][0], # Representative ActorName for option 2
                 'OptionObject3': current_options_details[2][0], # Representative ActorName for option 3

@@ -81,10 +81,17 @@ def main():
             if rounded_distance == 0.0:
                 continue
             
-            # Get cleaned names from the DataFrame
-            clean_actor1 = df[df['ActorName'] == actor1]['ShortActorName'].iloc[0]
-            clean_actor2 = df[df['ActorName'] == actor2]['ShortActorName'].iloc[0]
-            question = f"Measuring from the closest point of each object, what is the distance between the {clean_actor1} and the {clean_actor2} (in meters)?"
+            # Get display names from the DataFrame
+            actor1_row = df[df['ActorName'] == actor1].iloc[0]
+            actor2_row = df[df['ActorName'] == actor2].iloc[0]
+
+            actor1_desc = actor1_row.get('ActorDescription')
+            display_actor1 = actor1_desc if pd.notna(actor1_desc) and str(actor1_desc).strip() else actor1_row['ShortActorName']
+
+            actor2_desc = actor2_row.get('ActorDescription')
+            display_actor2 = actor2_desc if pd.notna(actor2_desc) and str(actor2_desc).strip() else actor2_row['ShortActorName']
+            
+            question = f"Measuring from the closest point of each object, what is the distance between the {display_actor1} and the {display_actor2} (in meters)?"
             
             # Record results with the pre-rounded distance
             all_results.append({

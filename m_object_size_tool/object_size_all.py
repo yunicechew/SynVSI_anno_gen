@@ -54,14 +54,15 @@ def main():
             # Get actor data
             actor_row = df[df['ActorName'] == actor_name].iloc[0]
             
-            # Get cleaned name
-            cleaned_name = actor_row['ShortActorName']
+            # Get display name
+            actor_desc = actor_row.get('ActorDescription')
+            display_name = actor_desc if pd.notna(actor_desc) and str(actor_desc).strip() else actor_row['ShortActorName']
             
             # Find the longest dimension
             longest_dim_name, longest_dim_meters, longest_dim_cm = find_longest_dimension(actor_row)
             
             # Create question
-            question = f"What is the length of the longest dimension (length, width, or height) of the {cleaned_name}, measured in centimeters?"
+            question = f"What is the length of the longest dimension (length, width, or height) of the {display_name}, measured in centimeters?"
             
             # Round the answer to 1 decimal place
             answer = round(longest_dim_cm, 1)

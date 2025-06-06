@@ -242,10 +242,19 @@ def main():
                         if min(abs(angle), abs(abs(angle) - 180)) < 40:
                             is_easy_ambiguous = True
 
-                        # Get cleaned names from the DataFrame
-                        clean_standing = df[df['ActorName'] == standing_at]['ShortActorName'].iloc[0]
-                        clean_facing = df[df['ActorName'] == facing_at]['ShortActorName'].iloc[0]
-                        clean_locate = df[df['ActorName'] == locate_at]['ShortActorName'].iloc[0]
+                        # Get display names from the DataFrame
+                        standing_row = df[df['ActorName'] == standing_at].iloc[0]
+                        facing_row = df[df['ActorName'] == facing_at].iloc[0]
+                        locate_row = df[df['ActorName'] == locate_at].iloc[0]
+
+                        standing_desc = standing_row.get('ActorDescription')
+                        display_standing = standing_desc if pd.notna(standing_desc) and str(standing_desc).strip() else standing_row['ShortActorName']
+
+                        facing_desc = facing_row.get('ActorDescription')
+                        display_facing = facing_desc if pd.notna(facing_desc) and str(facing_desc).strip() else facing_row['ShortActorName']
+
+                        locate_desc = locate_row.get('ActorDescription')
+                        display_locate = locate_desc if pd.notna(locate_desc) and str(locate_desc).strip() else locate_row['ShortActorName']
                         
                         # Initialize questions, answers, and options
                         hard_question = ""
@@ -260,7 +269,7 @@ def main():
 
                         # Assign questions and answers if not ambiguous
                         if not is_hard_ambiguous:
-                            hard_question = f"""If I am standing by the {clean_standing} and facing the {clean_facing}, is the {clean_locate} to my front-left, front-right, back-left, or back-right? The directions refer to the quadrants of a Cartesian plane (if I am standing at the origin and facing along the positive y-axis)."""
+                            hard_question = f"""If I am standing by the {display_standing} and facing the {display_facing}, is the {display_locate} to my front-left, front-right, back-left, or back-right? The directions refer to the quadrants of a Cartesian plane (if I am standing at the origin and facing along the positive y-axis)."""
                             correct_hard_answer_str = result['quadrant']
                             shuffled_hard_options = random.sample(POSSIBLE_HARD_OPTIONS, len(POSSIBLE_HARD_OPTIONS))
                             hard_options_formatted = [f"{chr(65+i)}. {opt}" for i, opt in enumerate(shuffled_hard_options)]
@@ -273,7 +282,7 @@ def main():
 
 
                         if not is_medium_ambiguous:
-                            medium_question = f"""If I am standing by the {clean_standing} and facing the {clean_facing}, is the {clean_locate} to my left, right, or back? An object is to my back if I would have to turn at least 135 degrees in order to face it."""
+                            medium_question = f"""If I am standing by the {display_standing} and facing the {display_facing}, is the {display_locate} to my left, right, or back? An object is to my back if I would have to turn at least 135 degrees in order to face it."""
                             correct_medium_answer_str = result['quadrant_medium']
                             shuffled_medium_options = random.sample(POSSIBLE_MEDIUM_OPTIONS, len(POSSIBLE_MEDIUM_OPTIONS))
                             medium_options_formatted = [f"{chr(65+i)}. {opt}" for i, opt in enumerate(shuffled_medium_options)]
@@ -286,7 +295,7 @@ def main():
 
 
                         if not is_easy_ambiguous:
-                            easy_question = f"""If I am standing by the {clean_standing} and facing the {clean_facing}, is the {clean_locate} to the left or the right of the {clean_standing}?"""
+                            easy_question = f"""If I am standing by the {display_standing} and facing the {display_facing}, is the {display_locate} to the left or the right of the {display_standing}?"""
                             correct_easy_answer_str = result['quadrant_easy']
                             shuffled_easy_options = random.sample(POSSIBLE_EASY_OPTIONS, len(POSSIBLE_EASY_OPTIONS))
                             easy_options_formatted = [f"{chr(65+i)}. {opt}" for i, opt in enumerate(shuffled_easy_options)]

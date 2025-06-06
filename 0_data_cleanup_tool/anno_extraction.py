@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import argparse
+import re # Added import
 
 # Configuration variables
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -16,6 +17,34 @@ INPUT_DATA_ROOT = os.path.join(project_root, "0_original_ue_anno")  # Path to or
 OUTPUT_DATA_ROOT = os.path.join(project_root, "0_data_cleanup_tool", "output")  # Keep output in cleanup tool
 
 # Removed clean_actor_name function
+
+# --- Add the new function here ---
+def _determine_short_actor_name(actor_name: str, cleaned_actor_name: str) -> str:
+    """Determines a more short short actor name for VLM prompting."""
+    short_actor_name = actor_name  # Default
+    parts = actor_name.split('_')
+    if len(parts) > 3:
+        raw_name_parts = []
+        for i in range(2, len(parts)):
+            if parts[i].endswith('v') and parts[i][:-1].isdigit():
+                break
+            raw_name_parts.append(parts[i])
+        if raw_name_parts:
+            joined_name = "".join(raw_name_parts)
+            short_actor_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', joined_name).lower()
+    elif len(parts) == 3:
+        if parts[1].lower() == 'to':
+            raw_name = parts[2]
+            short_actor_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', raw_name).lower()
+        else:
+            raw_name = parts[2]
+            short_actor_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', raw_name).lower()
+    else:
+        # Use cleaned_actor_name if provided and different, otherwise actor_name
+        # For this script, cleaned_actor_name will be the same as actor_name
+        short_actor_name = cleaned_actor_name.lower() if cleaned_actor_name else actor_name.lower()
+    return short_actor_name
+# --- End of new function ---
 
 def extract_ranked_actor_info(data_subdir=DEFAULT_DATA_SUBDIRECTORY, min_frame_count=MIN_FRAME_COUNT, min_volume=MIN_VOLUME):
     """
@@ -53,8 +82,13 @@ def extract_ranked_actor_info(data_subdir=DEFAULT_DATA_SUBDIRECTORY, min_frame_c
     actor_info = df[df['ActorName'].isin(qualified_actors['ActorName'])][selected_columns].drop_duplicates()
 
     # Convert world coordinates and sizes from centimeters to meters
-    world_columns = ['WorldX', 'WorldY', 'WorldZ', 'WorldSizeX', 'WorldSizeY', 'WorldSizeZ']
-    actor_info[world_columns] = actor_info[world_columns] / 100.0
+    # Apply transformation: X -> -X for WorldX
+    actor_info['WorldX'] = - (actor_info['WorldX'] / 100.0)
+    actor_info['WorldY'] = actor_info['WorldY'] / 100.0
+    actor_info['WorldZ'] = actor_info['WorldZ'] / 100.0
+    
+    size_columns = ['WorldSizeX', 'WorldSizeY', 'WorldSizeZ']
+    actor_info[size_columns] = actor_info[size_columns] / 100.0
 
     # Calculate volume in cubic meters
     actor_info['Volume'] = actor_info['WorldSizeX'] * actor_info['WorldSizeY'] * actor_info['WorldSizeZ']
@@ -67,6 +101,12 @@ def extract_ranked_actor_info(data_subdir=DEFAULT_DATA_SUBDIRECTORY, min_frame_c
     # Add frame count information
     merged_info = pd.merge(merged_info, qualified_actors[['ActorName', 'FrameCount']], on='ActorName')
     
+    # Generate ShortActorName
+    # Pass actor_name for both arguments as CleanedActorName is not separately generated here.
+    merged_info['ShortActorName'] = merged_info.apply(
+        lambda row: _determine_short_actor_name(row['ActorName'], row['ActorName']), axis=1
+    )
+
     # Extract camera information for each actor's first appearance frame
     camera_columns = ['CamX', 'CamY', 'CamZ', 'CamPitch', 'CamYaw', 'CamRoll']
     
@@ -84,9 +124,9 @@ def extract_ranked_actor_info(data_subdir=DEFAULT_DATA_SUBDIRECTORY, min_frame_c
         if not frame_data.empty and all(col in frame_data.columns for col in camera_columns):
             camera_row = frame_data.iloc[0]
             camera_data[actor_name] = {
-                'CamX': camera_row['CamX'] / 100.0,  # Convert to meters
-                'CamY': camera_row['CamY'] / 100.0,
-                'CamZ': camera_row['CamZ'] / 100.0,
+                'CamX': - (camera_row['CamX'] / 100.0),  # Convert to meters and apply transformation X -> -X
+                'CamY': camera_row['CamY'] / 100.0,   # Convert to meters
+                'CamZ': camera_row['CamZ'] / 100.0,   # Convert to meters
                 'CamPitch': camera_row['CamPitch'],
                 'CamYaw': camera_row['CamYaw'],
                 'CamRoll': camera_row['CamRoll']
@@ -103,7 +143,7 @@ def extract_ranked_actor_info(data_subdir=DEFAULT_DATA_SUBDIRECTORY, min_frame_c
     merged_info = merged_info.sort_values('FirstFrame')
     
     # Ensure column order with FirstFrame, FrameCount, Volume and Camera data
-    column_order = ['FirstFrame', 'FrameCount', 'ActorName', 'ActorClass', 
+    column_order = ['FirstFrame', 'FrameCount', 'ActorName', 'ActorClass', 'ShortActorName',
                     'WorldX', 'WorldY', 'WorldZ', 'WorldSizeX', 'WorldSizeY', 'WorldSizeZ', 'Volume',
                     'CamX', 'CamY', 'CamZ', 'CamPitch', 'CamYaw', 'CamRoll']
     merged_info = merged_info[column_order]
