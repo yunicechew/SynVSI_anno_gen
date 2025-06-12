@@ -9,8 +9,8 @@ project_root = os.path.dirname(script_dir)  # Navigate up to SynVSI_anno_gen
 
 # Default values
 DEFAULT_DATA_SUBDIRECTORY = "20250527-145925"
-MIN_FRAME_COUNT = 10  # Minimum number of frames an actor must appear in
-MIN_VOLUME = 0.002    # Minimum volume in cubic meters
+MIN_FRAME_COUNT = 5  # Minimum number of frames an actor must appear in
+MIN_VOLUME = 0.005   # Minimum volume in cubic meters
 
 # Input/Output paths
 INPUT_DATA_ROOT = os.path.join(project_root, "0_original_ue_anno")  # Path to original UE anno directory

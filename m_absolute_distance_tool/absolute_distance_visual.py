@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 POSSIBILITY_ID = 1  # Change this to visualize different actor pairs
 
 def visualize_distance(actor1, actor2, actor1_bounds, actor2_bounds, min_distance, possibility_id):
-    fig = plt.figure(figsize=(12, 12))
+    fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
     
     # Plot bounding boxes

@@ -25,7 +25,7 @@ def get_full_answer_string(answer_letter, options_str):
     return "N/A" # Fallback if not found or error
 
 def visualize_result(result_data, standing_at_name, facing_at_name, locate_at_name):
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(12, 8))
     
     # Extract points from the result data (updated to match new CSV structure)
     points = {

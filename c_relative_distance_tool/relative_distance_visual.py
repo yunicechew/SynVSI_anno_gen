@@ -29,7 +29,7 @@ def find_closest_points_3d(bounds1, bounds2, actor1, actor2):
     return x1, y1, z1, x2, y2, z2
 
 def visualize_distance(primary_obj, option_objs, primary_bounds, option_bounds, distances, possibility_id):
-    fig = plt.figure(figsize=(12, 12))
+    fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
     
     # Calculate the bounds of all objects to set proper axis limits

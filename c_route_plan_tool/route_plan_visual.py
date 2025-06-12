@@ -2,320 +2,321 @@ import pandas as pd
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches # For 2D rectangles
-
-# Robot dimensions (mirroring route_plan_all.py)
-ROBOT_WIDTH = 0.1  # meters, X-axis
-ROBOT_DEPTH = 0.1  # meters, Y-axis (front-to-back)
+import matplotlib.patches as patches # Added for bounding boxes and arcs
+import ast
 
 # Configuration variables
-POSSIBILITY_ID = 3  # Change this to visualize different route plans
-SHOW_OTHER_ACTORS = False # Set to False to hide non-route actors
+POSSIBILITY_ID_TO_VISUALIZE = 1  # Change this to visualize different combinations
 
-def ensure_output_directory(script_dir):
-    """Create an output directory for visualizations if it doesn't exist."""
-    output_dir = os.path.join(script_dir, 'output') # Ensure this is output_visuals
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    return output_dir
+# Define input file paths
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROUTES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output', 'route_plan_all.csv')
+ACTOR_ANNO_FILE = os.path.join(BASE_DIR, '0_data_cleanup_tool', 'output', 'ranked_unique_actor_anno.csv')
 
-def get_actor_data(actor_name, df_actors):
-    """Retrieve data for a specific actor."""
-    actor_data = df_actors[df_actors['ActorName'] == actor_name]
-    if actor_data.empty:
-        print(f"Warning: Actor '{actor_name}' not found in actors data.")
+def load_data():
+    """Loads route plan and actor annotation data from CSV files."""
+    try:
+        route_df = pd.read_csv(ROUTES_FILE)
+        actor_df = pd.read_csv(ACTOR_ANNO_FILE)
+        print(f"Successfully loaded {ROUTES_FILE}")
+        print(f"Successfully loaded {ACTOR_ANNO_FILE}")
+        return route_df, actor_df
+    except FileNotFoundError as e:
+        print(f"Error loading data: {e}. Please ensure input files are in the correct locations.")
+        return None, None
+
+def get_actor_details(actor_name, actor_df):
+    """Retrieves detailed information for a given actor."""
+    actor_info = actor_df[actor_df['ActorName'] == actor_name]
+    if actor_info.empty:
+        print(f"Warning: Actor '{actor_name}' not found in annotation file.")
         return None
-    return actor_data.iloc[0]
-
-def get_actor_bounds(actor):
-    """Calculate the 2D bounding box coordinates for an actor."""
-    x_min = actor['WorldX'] - actor['WorldSizeX'] / 2
-    x_max = actor['WorldX'] + actor['WorldSizeX'] / 2
-    y_min = actor['WorldY'] - actor['WorldSizeY'] / 2
-    y_max = actor['WorldY'] + actor['WorldSizeY'] / 2
-    # z_min = actor['WorldZ'] - actor['WorldSizeZ'] / 2 # Removed Z
-    # z_max = actor['WorldZ'] + actor['WorldSizeZ'] / 2 # Removed Z
-    return [x_min, x_max, y_min, y_max]
-
-def plot_2d_rect(ax, bounds, color, label, alpha=0.1, edge_alpha=0.8, linewidth=1):
-    """Plot a 2D rectangle with translucent face and solid edges."""
-    x_min, x_max, y_min, y_max = bounds
-    width = x_max - x_min
-    height = y_max - y_min
-    rect = patches.Rectangle((x_min, y_min), width, height, 
-                             linewidth=linewidth, edgecolor=color, 
-                             facecolor=color, alpha=alpha, label=label)
-    ax.add_patch(rect)
-
-    # Plot edges with different alpha if needed (optional, could simplify)
-    ax.plot([x_min, x_max], [y_min, y_min], color=color, alpha=edge_alpha, linewidth=linewidth) # Bottom
-    ax.plot([x_min, x_max], [y_max, y_max], color=color, alpha=edge_alpha, linewidth=linewidth) # Top
-    ax.plot([x_min, x_min], [y_min, y_max], color=color, alpha=edge_alpha, linewidth=linewidth) # Left
-    ax.plot([x_max, x_max], [y_min, y_max], color=color, alpha=edge_alpha, linewidth=linewidth) # Right
-
-
-def get_obb_corners_2d(robot_center_2d, robot_orientation_rad, robot_width, robot_depth):
-    """
-    Calculates the 2D coordinates of the four corners of the robot's Oriented Bounding Box (OBB).
-    Mirrors the logic from route_plan_all.py for consistency.
-    Args:
-        robot_center_2d (np.array): The 2D center of the robot.
-        robot_orientation_rad (float): The robot's orientation angle in radians
-                                      (angle of its front/depth axis).
-        robot_width (float): The robot's width.
-        robot_depth (float): The robot's depth (front-to-back).
-    Returns:
-        list: A list of 4 np.array, each representing a 2D corner of the OBB.
-    """
-    half_w = robot_width / 2
-    half_d = robot_depth / 2
-    local_corners = [
-        np.array([half_w, half_d]),    # Front-right relative to robot's local frame
-        np.array([-half_w, half_d]),   # Front-left
-        np.array([-half_w, -half_d]),  # Back-left
-        np.array([half_w, -half_d])    # Back-right
-    ]
-    robot_y_axis = np.array([np.cos(robot_orientation_rad), np.sin(robot_orientation_rad)])
-    robot_x_axis = np.array([-robot_y_axis[1], robot_y_axis[0]])
-    world_corners = []
-    for corner in local_corners:
-        world_corner = robot_center_2d + corner[0] * robot_x_axis + corner[1] * robot_y_axis
-        world_corners.append(world_corner)
-    return world_corners
-
-def plot_robot_obb(ax, center_2d, orientation_rad, robot_width, robot_depth, color, label, alpha=0.3, edge_alpha=0.9, linewidth=1.5):
-    """Plots the robot's OBB as a 2D polygon."""
-    corners = get_obb_corners_2d(center_2d, orientation_rad, robot_width, robot_depth)
-    polygon = patches.Polygon(corners, closed=True, 
-                              linewidth=linewidth, edgecolor=color, 
-                              facecolor=color, alpha=alpha, label=label)
-    ax.add_patch(polygon)
-
-
-def calculate_stand_next_to_target_2d(robot_center_2d, target_actor_data, robot_width, robot_depth):
-    """
-    Calculates the 2D position and orientation for the robot to stand "next to" a target actor.
-    The robot is positioned adjacent to one of the target's AABB faces (in 2D XY plane),
-    with its front (depth axis) oriented towards the target's center.
-    Mirrors the logic from route_plan_all.py for consistency.
-
-    Args:
-        robot_center_2d (np.array): The current 2D center of the robot (e.g., from actor it's starting at).
-                                      This is used to determine which face of the target is closest to this initial point.
-        target_actor_data (pd.Series): Data for the target actor, including WorldX/Y and WorldSizeX/Y.
-        robot_width (float): The width of the robot (X-axis dimension).
-        robot_depth (float): The depth of the robot (Y-axis, front-to-back dimension).
-
-    Returns:
-        tuple: (new_robot_position_2d, robot_orientation_angle_rad)
-               - new_robot_position_2d (np.array): The adjusted 2D center position of the robot.
-               - robot_orientation_angle_rad (float): The robot's orientation angle in radians,
-                                                      where 0 rad is along the positive X-axis.
-                                                      The robot's Y-axis (front) will point towards the target.
-    """
-    if target_actor_data is None:
-        # Fallback if target_actor_data is None (e.g. actor not found)
-        # Place robot at original point, default orientation
-        return robot_center_2d, 0.0
-
-    target_center_2d = np.array([target_actor_data['WorldX'], target_actor_data['WorldY']])
-    target_half_size_x = target_actor_data['WorldSizeX'] / 2
-    target_half_size_y = target_actor_data['WorldSizeY'] / 2
-
-    faces_properties = [
-        (target_half_size_x, 0, 1, 0),  # Right face (+X)
-        (-target_half_size_x, 0, -1, 0), # Left face (-X)
-        (0, target_half_size_y, 0, 1),   # Top face (+Y)
-        (0, -target_half_size_y, 0, -1)  # Bottom face (-Y)
-    ]
-
-    min_dist_sq = float('inf')
-    best_position = None
-    best_orientation_rad = None
-
-    # The robot_center_2d is the point from which we are trying to reach the target's face.
-    # For example, if this is for BeginAt, robot_center_2d is the center of BeginAt actor.
-    # We want to find which face of target_actor_data is closest to robot_center_2d
-    # and then place the robot next to that face.
-
-    for off_x, off_y, norm_x, norm_y in faces_properties:
-        # This is the center of the target's face
-        face_center_on_target_aabb = target_center_2d + np.array([off_x, off_y])
-        outward_normal = np.array([norm_x, norm_y])
-        
-        # Position the robot's center such that its edge is touching the target's face.
-        # The robot's front (depth axis) should point towards the target.
-        # So, we offset from the face_center_on_target_aabb by half the robot's depth along the outward_normal.
-        robot_pos_candidate = face_center_on_target_aabb + outward_normal * (robot_depth / 2)
-        
-        # Calculate distance from the original robot_center_2d to this candidate position
-        # This helps select the 'closest' face of the target actor to stand next to,
-        # relative to where the robot is conceptually starting (e.g. center of BeginAt actor)
-        dist_sq = np.sum((robot_pos_candidate - robot_center_2d)**2)
-        
-        if dist_sq < min_dist_sq:
-            min_dist_sq = dist_sq
-            best_position = robot_pos_candidate
-            # Orientation: robot's Y-axis (front) points opposite to the outward_normal
-            # (i.e., towards the target's center from this face)
-            best_orientation_rad = np.arctan2(-outward_normal[1], -outward_normal[0])
-            
-    if best_position is None:
-        direction_to_target = target_center_2d - robot_center_2d
-        if np.linalg.norm(direction_to_target) < 1e-6:
-            orientation_rad = 0 
-        else:
-            orientation_rad = np.arctan2(direction_to_target[1], direction_to_target[0])
-        return robot_center_2d, orientation_rad
-
-    return best_position, best_orientation_rad
-
-
-def visualize_route_plan(plan_data, df_actors, possibility_id, output_dir):
-    """Visualize a single route plan in 2D."""
-    fig = plt.figure(figsize=(19, 10))
-    ax = fig.add_subplot(111)
-
-    begin_at_actor = get_actor_data(plan_data['BeginAt_Name'], df_actors)
-    facing_at_actor = get_actor_data(plan_data['FacingAt_Name'], df_actors)
-    go_to_actor = get_actor_data(plan_data['GoTo_Name'], df_actors)
-    end_at_actor = get_actor_data(plan_data['EndAt_Name'], df_actors)
-
-    if not all([begin_at_actor is not None, facing_at_actor is not None, go_to_actor is not None, end_at_actor is not None]):
-        print(f"Could not visualize possibility {possibility_id} due to missing actor data.")
-        plt.close(fig)
-        return
-
-    # Original actor centers (used as reference for calculate_stand_next_to_target_2d)
-    begin_at_center_2d = np.array([begin_at_actor['WorldX'], begin_at_actor['WorldY']])
-    go_to_center_2d = np.array([go_to_actor['WorldX'], go_to_actor['WorldY']])
-    end_at_center_2d = np.array([end_at_actor['WorldX'], end_at_actor['WorldY']])
-    facing_at_center_2d = np.array([facing_at_actor['WorldX'], facing_at_actor['WorldY']])
-
-    # Calculate robot's actual positions and orientations
-    # 1. Robot at BeginAt, oriented towards FacingAt
-    robot_begin_pos_2d, _ = calculate_stand_next_to_target_2d(begin_at_center_2d, begin_at_actor, ROBOT_WIDTH, ROBOT_DEPTH)
-    # Initial orientation: robot's front (Y-axis) points from robot_begin_pos_2d to facing_at_center_2d
-    direction_to_facing = facing_at_center_2d - robot_begin_pos_2d
-    if np.linalg.norm(direction_to_facing) < 1e-6:
-        robot_initial_orientation_rad = 0 # Default if coincident
-    else:
-        robot_initial_orientation_rad = np.arctan2(direction_to_facing[1], direction_to_facing[0])
-
-    # 2. Robot at GoTo
-    # The robot stands next to the GoTo actor. Its orientation is determined by calculate_stand_next_to_target_2d,
-    # meaning its front faces the GoTo actor's center from the edge it's positioned at.
-    robot_goto_pos_2d, robot_goto_orientation_rad = calculate_stand_next_to_target_2d(go_to_center_2d, go_to_actor, ROBOT_WIDTH, ROBOT_DEPTH)
-
-    # 3. Robot at EndAt
-    # Similar to GoTo, robot stands next to EndAt actor, facing its center.
-    robot_end_pos_2d, robot_end_orientation_rad = calculate_stand_next_to_target_2d(end_at_center_2d, end_at_actor, ROBOT_WIDTH, ROBOT_DEPTH)
-
-    actors_in_plan_visual_info = {
-        plan_data['BeginAt_Name']: (begin_at_actor, 'blue', 'Begin At (Actor)'),
-        plan_data['FacingAt_Name']: (facing_at_actor, 'cyan', 'Facing At (Actor)'),
-        plan_data['GoTo_Name']: (go_to_actor, 'orange', 'Go To (Actor)'),
-        plan_data['EndAt_Name']: (end_at_actor, 'red', 'End At (Actor)')
+    actor_info = actor_info.iloc[0]
+    description = actor_info['ActorDescription']
+    short_name = actor_info['ShortActorName']
+    display_name = description if pd.notna(description) and description.strip() != "" else short_name
+    return {
+        'name': actor_name,
+        'display_name': display_name,
+        'x': actor_info['WorldX'],
+        'y': actor_info['WorldY'],
+        'z': actor_info['WorldZ'],
+        'size_x': actor_info['WorldSizeX'], # Added
+        'size_y': actor_info['WorldSizeY']  # Added
     }
 
-    all_plot_bounds = []
+def plot_actor(ax, actor_details, color, label_prefix="", marker='o', size=100):
+    """Plots a single actor on the given axes with its bounding box."""
+    if actor_details:
+        # Plot bounding box
+        rect = patches.Rectangle(
+            (actor_details['x'] - actor_details['size_x'] / 2, actor_details['y'] - actor_details['size_y'] / 2),
+            actor_details['size_x'],
+            actor_details['size_y'],
+            linewidth=1,
+            edgecolor=color,
+            facecolor=color, # Use the base color for facecolor
+            alpha=0.33,      # Set transparency using the alpha parameter
+            label=f"{label_prefix}{actor_details['display_name']}" if marker == 'o' else None, # Avoid duplicate labels for facing actor
+            zorder=4
+        )
+        ax.add_patch(rect)
+        # Plot center marker
+        ax.scatter(actor_details['x'], actor_details['y'], color=color, s=size/5, marker=marker, zorder=5) # Smaller marker for center
+        ax.text(actor_details['x'] + 0.1, actor_details['y'] + 0.1, actor_details['display_name'], fontsize=9, zorder=6)
 
-    # Plot key ACTORS in the plan (their AABBs)
-    for name, (actor_data, color, label_suffix) in actors_in_plan_visual_info.items():
-        bounds = get_actor_bounds(actor_data)
-        all_plot_bounds.append(bounds)
-        plot_2d_rect(ax, bounds, color, f"{actor_data['ShortActorName']}\n({label_suffix})", alpha=0.2, edge_alpha=0.9, linewidth=1.5)
-        ax.text(actor_data['WorldX'], actor_data['WorldY'] + (bounds[3]-bounds[2])/2 + 0.1, 
-                f"{actor_data['ShortActorName']}\n({label_suffix})", color=color, 
-                ha='center', va='bottom', fontsize=8, fontweight='bold')
 
-    # Plot other actors for context if enabled
-    if SHOW_OTHER_ACTORS:
-        for _, other_actor_row in df_actors.iterrows():
-            if other_actor_row['ActorName'] not in actors_in_plan_visual_info:
-                other_bounds = get_actor_bounds(other_actor_row)
-                all_plot_bounds.append(other_bounds)
-                plot_2d_rect(ax, other_bounds, 'gray', f"{other_actor_row['ShortActorName']}\n(Context)", alpha=0.05, edge_alpha=0.3)
+def calculate_angle_degrees(v1, v2):
+    """Calculates the angle in degrees between two vectors v1 and v2."""
+    dot_product = np.dot(v1, v2)
+    norm_v1 = np.linalg.norm(v1)
+    norm_v2 = np.linalg.norm(v2)
+    if norm_v1 == 0 or norm_v2 == 0:
+        return 0 # Avoid division by zero
+    cos_angle = dot_product / (norm_v1 * norm_v2)
+    angle_rad = np.arccos(np.clip(cos_angle, -1.0, 1.0)) # Clip for numerical stability
+    angle_deg = np.degrees(angle_rad)
+
+    # Determine sign of the angle (for left/right turn)
+    cross_product_z = v1[0] * v2[1] - v1[1] * v2[0]
+    if cross_product_z < 0:
+        angle_deg = -angle_deg # Clockwise turn
+    return angle_deg
+
+
+def plot_turn_arc(ax, center_pos, prev_vec, next_vec, turn_command):
+    """Plots an arc representing the turn."""
+    if not center_pos or prev_vec is None or next_vec is None:
+        return
+
+    # Normalize vectors for angle calculation and consistent arc radius
+    prev_vec_norm = prev_vec / np.linalg.norm(prev_vec) if np.linalg.norm(prev_vec) > 0 else np.array([0,1])
+    next_vec_norm = next_vec / np.linalg.norm(next_vec) if np.linalg.norm(next_vec) > 0 else np.array([0,1])
+
+    angle_prev_rad = np.arctan2(prev_vec_norm[1], prev_vec_norm[0])
+    angle_next_rad = np.arctan2(next_vec_norm[1], next_vec_norm[0])
+
+    angle_prev_deg = np.degrees(angle_prev_rad)
+    angle_next_deg = np.degrees(angle_next_rad)
+
+    # Adjust angles to be in [0, 360)
+    if angle_prev_deg < 0: angle_prev_deg += 360
+    if angle_next_deg < 0: angle_next_deg += 360
+
+    # Determine the sweep angle and direction
+    turn_angle_deg = calculate_angle_degrees(prev_vec_norm, next_vec_norm)
+
+    arc_radius = 0.5 # Adjust as needed for visibility
+    arc_color = 'purple'
+
+    # Theta1 is the start angle of the arc, Theta2 is the end angle
+    # For positive turn_angle_deg (left), arc goes from prev_vec to next_vec counter-clockwise
+    # For negative turn_angle_deg (right), arc goes from prev_vec to next_vec clockwise
+    # matplotlib Arc takes angles in degrees, counter-clockwise from positive x-axis
+
+    theta1 = angle_prev_deg
+    theta2 = angle_prev_deg + turn_angle_deg # This will be correct due to signed turn_angle_deg
+
+    # Ensure theta2 is correctly representing the sweep
+    # If turn_angle_deg is large, theta2 might wrap around. Matplotlib handles this.
+
+    arc = patches.Arc((center_pos['x'], center_pos['y']), 
+                      width=arc_radius*2, height=arc_radius*2, 
+                      angle=0, # Rotation of ellipse, 0 for circle
+                      theta1=min(theta1, theta2) if turn_angle_deg !=0 else theta1, 
+                      theta2=max(theta1, theta2) if turn_angle_deg !=0 else theta2, 
+                      color=arc_color, linewidth=1.5, linestyle='-', zorder=7)
+    ax.add_patch(arc)
+
+    # Add arrow to indicate direction of turn at the end of the arc
+    # Calculate the midpoint of the arc for the arrow
+    mid_angle_rad = np.deg2rad(theta1 + turn_angle_deg / 2)
+    arrow_dx = np.cos(mid_angle_rad) * 0.05 # Small offset for arrow head
+    arrow_dy = np.sin(mid_angle_rad) * 0.05
+
+    # Position the arrow head at the end of the arc segment
+    end_arc_point_x = center_pos['x'] + arc_radius * np.cos(np.deg2rad(theta2))
+    end_arc_point_y = center_pos['y'] + arc_radius * np.sin(np.deg2rad(theta2))
+
+    # Direction of the arrow (tangent at the end of the arc)
+    # If turning left (positive angle), tangent is perpendicular to radius vector, pointing CCW
+    # If turning right (negative angle), tangent is perpendicular, pointing CW
+    tangent_angle_rad = np.deg2rad(theta2) + (np.pi/2 if turn_angle_deg > 0 else -np.pi/2)
     
-    # Set plot limits based on all actors plotted
-    if all_plot_bounds:
-        min_coords = np.min([[b[0], b[2]] for b in all_plot_bounds], axis=0)
-        max_coords = np.max([[b[1], b[3]] for b in all_plot_bounds], axis=0)
-        
-        data_range_x = max_coords[0] - min_coords[0]
-        data_range_y = max_coords[1] - min_coords[1]
-        padding = max(data_range_x, data_range_y) * 0.15 # Increased padding slightly
-        if padding == 0: padding = 1.0
+    # For simplicity, just place a text label for now, precise arrowheads on arcs are tricky
+    # ax.text(end_arc_point_x, end_arc_point_y, '>', color=arc_color, zorder=8, 
+    #         horizontalalignment='center', verticalalignment='center', 
+    #         rotation=np.degrees(tangent_angle_rad))
 
-        ax.set_xlim(min_coords[0] - padding, max_coords[0] + padding)
-        ax.set_ylim(min_coords[1] - padding, max_coords[1] + padding)
+
+def visualize_route(possibility_id, route_data, actor_df):
+    """Visualizes a single route plan."""
+    if route_data.empty:
+        print(f"No data found for Possibility ID: {possibility_id}")
+        return
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Get actor details
+    begin_actor_name = route_data['BeginActor'].iloc[0]
+    facing_actor_name = route_data['FacingActor'].iloc[0]
+    end_actor_name = route_data['EndActor'].iloc[0]
+    intermediate_stops_str = route_data['IntermediateStops'].iloc[0]
+
+    begin_actor_d = get_actor_details(begin_actor_name, actor_df)
+    facing_actor_d = get_actor_details(facing_actor_name, actor_df)
+    end_actor_d = get_actor_details(end_actor_name, actor_df)
+
+    intermediate_actors_d = []
+    if pd.notna(intermediate_stops_str) and intermediate_stops_str:
+        intermediate_actor_names = [name.strip() for name in intermediate_stops_str.split(',')]
+        for name in intermediate_actor_names:
+            detail = get_actor_details(name, actor_df)
+            if detail:
+                intermediate_actors_d.append(detail)
+
+    # Plot actors
+    plot_actor(ax, begin_actor_d, 'blue', "Begin: ")
+    # For facing actor, use a different marker and smaller size, no redundant label from bounding box
+    if facing_actor_d:
+        rect = patches.Rectangle(
+            (facing_actor_d['x'] - facing_actor_d['size_x'] / 2, facing_actor_d['y'] - facing_actor_d['size_y'] / 2),
+            facing_actor_d['size_x'],
+            facing_actor_d['size_y'],
+            linewidth=1,
+            edgecolor='cyan',
+            facecolor='cyan', # Use the base color for facecolor
+            alpha=0.33,       # Set transparency using the alpha parameter
+            zorder=4
+        )
+        ax.add_patch(rect)
+        ax.scatter(facing_actor_d['x'], facing_actor_d['y'], color='cyan', s=70/5, marker='x', label="Facing: " + facing_actor_d['display_name'], zorder=5)
+        ax.text(facing_actor_d['x'] + 0.1, facing_actor_d['y'] + 0.1, facing_actor_d['display_name'], fontsize=9, zorder=6)
+
+    plot_actor(ax, end_actor_d, 'red', "End: ")
+    for i, inter_actor_d in enumerate(intermediate_actors_d):
+        plot_actor(ax, inter_actor_d, 'green', f"Stop {i+1}: ")
+
+    # Plot path and facing lines
+    path_points_x = [begin_actor_d['x']]
+    path_points_y = [begin_actor_d['y']]
+
+    # Initial facing vector
+    if begin_actor_d and facing_actor_d:
+        vec_initial_facing = np.array([facing_actor_d['x'] - begin_actor_d['x'], facing_actor_d['y'] - begin_actor_d['y']])
+        ax.arrow(begin_actor_d['x'], begin_actor_d['y'], 
+                 vec_initial_facing[0], 
+                 vec_initial_facing[1], 
+                 head_width=0.15, head_length=0.2, fc='cyan', ec='cyan', linestyle='--', label="Initial Facing Dir", zorder=3)
     else:
-        ax.set_xlim(-5, 5); ax.set_ylim(-5, 5)
+        vec_initial_facing = np.array([0, 1]) # Default if facing actor is missing
 
-    # Plot Robot OBBs at key positions
-    plot_robot_obb(ax, robot_begin_pos_2d, robot_initial_orientation_rad, ROBOT_WIDTH, ROBOT_DEPTH, 'green', 'Robot @ Begin', alpha=0.5)
-    plot_robot_obb(ax, robot_goto_pos_2d, robot_goto_orientation_rad, ROBOT_WIDTH, ROBOT_DEPTH, 'darkorange', 'Robot @ GoTo', alpha=0.5)
-    plot_robot_obb(ax, robot_end_pos_2d, robot_end_orientation_rad, ROBOT_WIDTH, ROBOT_DEPTH, 'darkred', 'Robot @ End', alpha=0.5)
+    current_pos_details = begin_actor_d
+    current_facing_vec = vec_initial_facing
+    route_sequence = intermediate_actors_d + [end_actor_d]
 
-    # Plot path segments between ROBOT positions
-    ax.plot([robot_begin_pos_2d[0], robot_goto_pos_2d[0]], [robot_begin_pos_2d[1], robot_goto_pos_2d[1]],
-            'g--o', linewidth=2, markersize=5, label='Path: Robot Begin -> Robot GoTo')
-    ax.plot([robot_goto_pos_2d[0], robot_end_pos_2d[0]], [robot_goto_pos_2d[1], robot_end_pos_2d[1]],
-            'm--o', linewidth=2, markersize=5, label='Path: Robot GoTo -> Robot EndAt')
+    # Define turns here, before it's used in the loop
+    turns_str = route_data['Answer'].iloc[0]
+    turns = [] # Initialize turns as an empty list
+    if pd.notna(turns_str) and turns_str:
+        # Get only command e.g. 'turn left', 'go straight', 'turn right'
+        turns = [t.strip().split('(')[0].strip() for t in turns_str.split(',') if t.strip()] 
 
-    # Annotate turn actions (positions might need adjustment based on robot OBBs)
-    action1_text = f"1. {plan_data['AnswerAction1']}"
-    # Place annotation near the robot's begin position
-    ax.text(robot_begin_pos_2d[0], robot_begin_pos_2d[1] + 0.2, action1_text, color='black', 
-            fontsize=9, bbox=dict(facecolor='yellow', alpha=0.5, pad=0.2))
+    path_points_x = [begin_actor_d['x']]
+    path_points_y = [begin_actor_d['y']]
 
-    action2_text = f"3. {plan_data['AnswerAction2']}"
-    # Place annotation near the robot's goto position
-    ax.text(robot_goto_pos_2d[0], robot_goto_pos_2d[1] + 0.2, action2_text, color='black', 
-            fontsize=9, bbox=dict(facecolor='yellow', alpha=0.5, pad=0.2))
+    for i, target_actor_details in enumerate(route_sequence):
+        if current_pos_details and target_actor_details:
+            ax.plot([current_pos_details['x'], target_actor_details['x']], [current_pos_details['y'], target_actor_details['y']], 'k--', zorder=2) # Path segment
+            path_points_x.append(target_actor_details['x'])
+            path_points_y.append(target_actor_details['y'])
 
-    ax.set_xlabel('World X (m)')
-    ax.set_ylabel('World Y (m)')
-    ax.set_title(f"Route Plan Visualization (Possibility ID: {possibility_id})\n"
-                 f"{plan_data['BeginAt_Display']} (Robot Start) -> {plan_data['GoTo_Display']} (Robot Mid) -> {plan_data['EndAt_Display']} (Robot End)", fontsize=10)
-    ax.legend(fontsize=7) # Adjusted legend font size
-    ax.set_aspect('equal', adjustable='box')
-    plt.tight_layout()
-
-    filename = f'route_plan_visual.png'
-    filepath = os.path.join(output_dir, filename)
-    plt.savefig(filepath, dpi=300)
-    print(f"Visualization saved to {filepath}")
-    plt.show() # Comment out if running in a headless environment or for batch processing
-    plt.close(fig)
-
-def main():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(script_dir) # Assumes c_route_plan_tool is one level down
-    output_visual_dir = ensure_output_directory(script_dir)
-
-    actors_csv_path = os.path.join(project_root, '0_data_cleanup_tool', 'output', 'ranked_unique_actor_anno.csv')
-    route_plans_csv_path = os.path.join(script_dir, 'output', 'route_plan_all.csv')
-
-    try:
-        df_actors = pd.read_csv(actors_csv_path)
-        df_route_plans = pd.read_csv(route_plans_csv_path)
-    except FileNotFoundError as e:
-        print(f"Error loading CSV files: {e}")
-        return
-
-    if df_route_plans.empty:
-        print("Route plan CSV is empty. No data to visualize.")
-        return
-
-    # Get data for the specified possibility ID
-    plan_to_visualize = df_route_plans[df_route_plans['Possibility'] == POSSIBILITY_ID]
-
-    if plan_to_visualize.empty:
-        print(f"No data found for Possibility ID: {POSSIBILITY_ID}. Max ID is {df_route_plans['Possibility'].max()}")
-        return
+            # Calculate and plot turn arc
+            vec_to_target = np.array([target_actor_details['x'] - current_pos_details['x'], target_actor_details['y'] - current_pos_details['y']])
+            if np.linalg.norm(current_facing_vec) > 0 and np.linalg.norm(vec_to_target) > 0:
+                turn_command_from_csv = ""
+                if i < len(turns): # Check against length of turns list
+                    turn_command_from_csv = turns[i]
+                # Pass the actual turn command string to plot_turn_arc
+                plot_turn_arc(ax, current_pos_details, current_facing_vec, vec_to_target, turn_command_from_csv)
+            
+            # Update for next iteration
+            current_facing_vec = vec_to_target
+            current_pos_details = target_actor_details
     
-    visualize_route_plan(plan_to_visualize.iloc[0], df_actors, POSSIBILITY_ID, output_visual_dir)
+    ax.plot(path_points_x, path_points_y, 'ko-', label="Route Path", zorder=1) # Full path with markers
 
-if __name__ == "__main__":
-    main()
+    # Annotate turns (Text labels)
+    # 'turns' is already defined above
+    turn_visualization_points = [begin_actor_d] + intermediate_actors_d
+
+    for i, turn_cmd in enumerate(turns):
+        if i < len(turn_visualization_points) and turn_visualization_points[i]:
+            actor_name_for_size = turn_visualization_points[i]['name']
+            actor_size_y = 0
+            if actor_df is not None and not actor_df[actor_df['ActorName'] == actor_name_for_size].empty:
+                 actor_size_y = actor_df.loc[actor_df['ActorName'] == actor_name_for_size, 'WorldSizeY'].iloc[0]
+            
+            ax.annotate(f"{turn_cmd.split()[0].capitalize()} {turn_cmd.split()[1] if len(turn_cmd.split()) > 1 else ''}", 
+                        (turn_visualization_points[i]['x'], turn_visualization_points[i]['y']), 
+                        textcoords="offset points", xytext=(0,15 + actor_size_y * 5),
+                        ha='center', color='purple', zorder=7,
+                        bbox=dict(facecolor='white', alpha=0.5, edgecolor='none', boxstyle='round,pad=0.3'))
+
+    # Set plot properties
+    all_x = [d['x'] for d in [begin_actor_d, facing_actor_d, end_actor_d] + intermediate_actors_d if d]
+    all_y = [d['y'] for d in [begin_actor_d, facing_actor_d, end_actor_d] + intermediate_actors_d if d]
+    if not all_x or not all_y: # handle case where no actors could be plotted
+        print("Error: No actor coordinates available to set plot limits.")
+        plt.close(fig)
+        return
+        
+    ax.set_xlabel("World X Coordinate")
+    ax.set_ylabel("World Y Coordinate")
+    ax.set_title(f"Route Plan Visualization - Possibility ID: {possibility_id}")
+    ax.legend(loc='best')
+    ax.grid(True)
+    ax.axis('equal') # Ensure X and Y scales are the same for correct angle representation
+    
+    # Determine plot limits with padding
+    x_min, x_max = min(all_x), max(all_x)
+    y_min, y_max = min(all_y), max(all_y)
+    x_range = x_max - x_min if x_max > x_min else 1.0
+    y_range = y_max - y_min if y_max > y_min else 1.0
+    padding = max(x_range, y_range) * 0.1 # 10% padding
+
+    ax.set_xlim(x_min - padding, x_max + padding)
+    ax.set_ylim(y_min - padding, y_max + padding)
+
+    plt.tight_layout() # Adjust layout to fit screen better
+
+    # Define output path for the plot
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    plot_filename = os.path.join(output_dir, 'route_plan_visual.png')
+    
+    try:
+        plt.savefig(plot_filename)
+        print(f"Plot saved to {plot_filename}")
+    except Exception as e:
+        print(f"Error saving plot: {e}")
+
+    plt.show()
+
+if __name__ == '__main__':
+    route_df, actor_df = load_data()
+    if route_df is not None and actor_df is not None:
+        # Ensure output directory exists (moved here for earlier check, though visualize_route also checks)
+        output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output')
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            print(f"Created output directory: {output_dir}")
+            
+        selected_route_data = route_df[route_df['Possibility'] == POSSIBILITY_ID_TO_VISUALIZE]
+        if not selected_route_data.empty:
+            visualize_route(POSSIBILITY_ID_TO_VISUALIZE, selected_route_data, actor_df)
+        else:
+            print(f"Possibility ID {POSSIBILITY_ID_TO_VISUALIZE} not found in {ROUTES_FILE}.")
+    else:
+        print("Failed to load data. Visualization script will not run.")

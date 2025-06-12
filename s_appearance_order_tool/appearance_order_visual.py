@@ -17,7 +17,7 @@ def visualize_appearance_order(actors, first_frames, possibility_id):
         first_frames: List of first appearance frames for each actor
         possibility_id: ID of the possibility being visualized
     """
-    fig = plt.figure(figsize=(12, 12))
+    fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
     
     # Define colors for appearance order

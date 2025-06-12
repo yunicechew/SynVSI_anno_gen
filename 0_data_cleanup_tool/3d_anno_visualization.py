@@ -16,7 +16,7 @@ output_visualization_path = os.path.join(script_dir, 'output', '3d_anno_visualiz
 df = pd.read_csv(actors_csv_path)
 
 # Create the figure and 3D axis
-fig = plt.figure(figsize=(15, 10))
+fig = plt.figure(figsize=(12, 8))
 ax = fig.add_subplot(111, projection='3d')
 
 # Plot points and boxes

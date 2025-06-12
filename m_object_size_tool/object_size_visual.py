@@ -17,7 +17,7 @@ def visualize_object_size(actor, actor_bounds, longest_dim, possibility_id):
         longest_dim: String indicating the longest dimension ('length (X)', 'width (Y)', or 'height (Z)')
         possibility_id: ID of the possibility being visualized
     """
-    fig = plt.figure(figsize=(12, 12))
+    fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
     
     # Calculate padding for axis limits
