@@ -84,6 +84,7 @@ def extract_ranked_actor_info(data_subdir=DEFAULT_DATA_SUBDIRECTORY, min_frame_c
     # Convert world coordinates and sizes from centimeters to meters
     # Apply transformation: X -> -X for WorldX
     actor_info['WorldX'] = - (actor_info['WorldX'] / 100.0)
+    # actor_info['WorldX'] = (actor_info['WorldX'] / 100.0)
     actor_info['WorldY'] = actor_info['WorldY'] / 100.0
     actor_info['WorldZ'] = actor_info['WorldZ'] / 100.0
     

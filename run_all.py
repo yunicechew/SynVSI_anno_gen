@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 # Toggle flags for scripts
-ENABLE_VISUALIZATIONS = False  # Set to False to skip all visualization scripts
+ENABLE_VISUALIZATIONS = True  # Set to False to skip all visualization scripts
 ENABLE_FRAME_EXTRACTION = False  # Set to False to skip frame extraction script
 ENABLE_INFERENCE_SCRIPTS = False # Set to False to skip inference scripts
 
@@ -44,6 +44,7 @@ def main():
         "c_object_count_tool/object_count_all.py",
         "c_relative_direction_tool/relative_direction_all.py",
         "c_relative_distance_tool/relative_distance_all.py",
+        "c_route_plan_tool/route_plan_all.py",
         # Spatiotemporal scripts
         "s_appearance_order_tool/appearance_order_all.py"
     ]
@@ -65,6 +66,7 @@ def main():
         # Configuration visualizations # Updated comment
         "c_relative_direction_tool/relative_direction_visual.py",
         "c_relative_distance_tool/relative_distance_visual.py",
+        "c_route_plan_tool/route_plan_visual.py",
         # Spatiotemporal visualizations # Updated comment
         "s_appearance_order_tool/appearance_order_visual.py"
     ]
