@@ -6,17 +6,17 @@ This project, SynVSI Annotation Toolkit, is designed to transform raw 3D spatial
 
 The generation of these Q&A pairs is guided by a taxonomy derived from the VSI-Bench benchmark, focusing on spatial and spatiotemporal understanding. This taxonomy categorizes visual-spatial inquiries into several key areas:
 
-*   **Configuration (47.6%)**: Understanding the spatial arrangement of objects, including:
-    *   Relative Direction (18.9%)
-    *   Relative Distance (13.8%)
-    *   Object Count (11.1%)
-    *   Route Plan (3.8%)
-*   **Measurement (40.3%)**: Quantifying attributes of objects and spaces, such as:
-    *   Object Size (18.5%)
-    *   Room Size (5.6%)
-    *   Absolute Distance (16.2%)
-*   **Spatiotemporal (12.1%)**: Analyzing events and object states over time, for instance:
-    *   Appearance Order (12.1%)
+*   **Configuration**: Understanding the spatial arrangement of objects, including:
+    *   Relative Direction
+    *   Relative Distance
+    *   Object Count
+    *   Route Plan
+*   **Measurement**: Quantifying attributes of objects and spaces, such as:
+    *   Object Size
+    *   Room Size
+    *   Absolute Distance
+*   **Spatiotemporal**: Analyzing events and object states over time, for instance:
+    *   Appearance Order
 
 This toolkit provides a suite of scripts to process raw data, extract relevant spatial and temporal information, generate corresponding questions and answers based on the VSI-Bench taxonomy, and optionally visualize the scenarios.
 
@@ -31,6 +31,7 @@ This toolkit provides a suite of scripts to process raw data, extract relevant s
 -   `c_object_count_tool/`: Object counting and Q&A generation.
 -   `c_relative_direction_tool/`: Relative direction analysis and visuals.
 -   `c_relative_distance_tool/`: Relative distance comparisons and visuals.
+-   `c_route_plan_tool/`: Route plan generation and Q&A.
 -   `s_appearance_order_tool/`: Appearance order analysis and visuals.
 -   `0_infer_and_score/`: Placeholder for Q&A consolidation, inference, and scoring.
 -   `run_all.py`: Script to run the entire pipeline.
@@ -127,7 +128,20 @@ The toolkit is organized into several modules, each targeting specific aspects o
     -   `relative_distance_all.csv`: Relative distance comparison data and Q&A.
     -   `relative_distance_visual.png` (if visualizer run).
 
-### 8. Appearance Order Analysis (`s_appearance_order_tool/`)
+### 8. Route Plan Analysis (`c_route_plan_tool/`)
+
+-   **Functionality**: Generates complex route navigation scenarios between a start, end, and optional intermediate points, creating multiple-choice questions about the required turn directions.
+-   **Key Scripts**:
+    -   `route_plan_all.py`: Identifies valid routes, calculates turn commands, generates multiple-choice Q&A.
+    -   `route_plan_visual.py`: Visualizes a selected route, including actor locations, path, facing direction, and turns (set `POSSIBILITY_ID` in script).
+-   **Inputs**:
+    -   `0_data_cleanup_tool/output/ranked_unique_actor_anno.csv`
+    -   `m_absolute_distance_tool/output/absolute_distances_all.csv` (implicitly, for distance checks within `route_plan_all.py`)
+-   **Outputs** (in `c_route_plan_tool/output/`):
+    -   `route_plan_all.csv`: Route plan data, generated questions, multiple-choice options, and answers.
+    -   `route_plan_visual.png` (if visualizer run).
+
+### 9. Appearance Order Analysis (`s_appearance_order_tool/`)
 
 -   **Functionality**: Determines the order in which objects appear based on their first frame of appearance and generates Q&A about this sequence.
 -   **Key Scripts**:
@@ -139,7 +153,7 @@ The toolkit is organized into several modules, each targeting specific aspects o
     -   `appearance_order_all.csv`: Object appearance order data and Q&A.
     -   `appearance_order_visual.png` (if visualizer run).
 
-### 9. Inference and Scoring (`0_infer_and_score/`)
+### 10. Inference and Scoring (`0_infer_and_score/`)
 
 -   **Functionality**: (Planned) Consolidates Q&A from all generation tools, runs them through an inference model, and scores the results.
 -   **Key Scripts**: (Planned)
