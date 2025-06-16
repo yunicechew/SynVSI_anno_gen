@@ -6,7 +6,7 @@ import matplotlib.patches as patches # Added for bounding boxes and arcs
 import ast
 
 # Configuration variables
-POSSIBILITY_ID_TO_VISUALIZE = 1  # Change this to visualize different combinations
+POSSIBILITY_ID_TO_VISUALIZE = 8  # Change this to visualize different combinations
 
 # Define input file paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -216,11 +216,40 @@ def visualize_route(possibility_id, route_data, actor_df):
     route_sequence = intermediate_actors_d + [end_actor_d]
 
     # Define turns here, before it's used in the loop
-    turns_str = route_data['Answer'].iloc[0]
+    # MODIFICATION START: Update how 'turns' are derived from 'Options' and 'Answer'
+    options_str = route_data['Options'].iloc[0]
+    correct_answer_letter = route_data['Answer'].iloc[0]
     turns = [] # Initialize turns as an empty list
-    if pd.notna(turns_str) and turns_str:
-        # Get only command e.g. 'turn left', 'go straight', 'turn right'
-        turns = [t.strip().split('(')[0].strip() for t in turns_str.split(',') if t.strip()] 
+
+    if pd.notna(options_str) and options_str and pd.notna(correct_answer_letter) and correct_answer_letter:
+        try:
+            options_list = ast.literal_eval(options_str) # ast.literal_eval is safer
+            correct_option_full_string = ""
+            for option_item in options_list:
+                # option_item is like "A. Turn Left" or "B. Turn Right, Turn Back"
+                if option_item.strip().startswith(correct_answer_letter + "."):
+                    correct_option_full_string = option_item.strip()
+                    break
+            
+            if correct_option_full_string:
+                # Remove "X. " part, e.g., "A. "
+                # Ensure there's a space after the dot before splitting
+                if ". " in correct_option_full_string:
+                    actual_turns_sequence_str = correct_option_full_string.split('. ', 1)[1]
+                    # Split by comma to get individual turn commands
+                    turns = [t.strip() for t in actual_turns_sequence_str.split(',') if t.strip()]
+                else: # Handle cases like "A.Turn Left" if that occurs
+                    actual_turns_sequence_str = correct_option_full_string.split('.', 1)[1]
+                    turns = [t.strip() for t in actual_turns_sequence_str.split(',') if t.strip()]
+
+            else:
+                print(f"Warning: Correct answer letter '{correct_answer_letter}' not found in options: {options_list} for Possibility ID {possibility_id}")
+        except (ValueError, SyntaxError) as e:
+            print(f"Warning: Could not parse options string: '{options_str}'. Error: {e} for Possibility ID {possibility_id}")
+            turns = [] # Ensure turns is empty if parsing fails
+    else:
+        print(f"Warning: 'Options' or 'Answer' data is missing or invalid for Possibility ID {possibility_id}.")
+    # MODIFICATION END
 
     path_points_x = [begin_actor_d['x']]
     path_points_y = [begin_actor_d['y']]

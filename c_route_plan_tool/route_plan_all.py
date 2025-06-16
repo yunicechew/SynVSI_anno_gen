@@ -3,6 +3,7 @@ import itertools
 import math
 import os
 import numpy as np # Added for vector math
+import random # Added for shuffling options
 
 # Configuration Variables
 MIN_END_DISTANCE = 1  # Minimum distance between begin_at and end_at in meters
@@ -152,7 +153,7 @@ def get_vector(actor_from_details, actor_to_details):
 
 def calculate_angle_and_turn(vec_facing, vec_to_target):
     """Calculates the signed angle from the current facing vector to the target vector
-    and determines the corresponding turn command ('turn left', 'turn right', 'turn back', or 'discard_ambiguous_turn').
+    and determines the corresponding turn command ('Turn Left', 'Turn Right', 'Turn Back', or 'discard_ambiguous_turn').
 
     Args:
         vec_facing (np.array): The current 2D facing direction vector.
@@ -181,14 +182,14 @@ def calculate_angle_and_turn(vec_facing, vec_to_target):
     # Left (CCW, positive angle, +20° to +135°): Turn left.
     # Right (CW, negative angle, -135° to -20°): Turn right.
     # Outside ±135° (i.e., > +135° or < -135°): Turn back.
-    if -20 <= angle_deg <= 20:
+    if -30 <= angle_deg <= 30:
         return angle_deg, "discard_ambiguous_turn"
-    elif 20 < angle_deg <= 135: # Positive angle (CCW) is turn left
-        return angle_deg, "turn left"
-    elif -135 <= angle_deg < -20: # Negative angle (CW) is turn right
-        return angle_deg, "turn right"
+    elif 30 < angle_deg <= 135: # Positive angle (CCW) is turn left
+        return angle_deg, "Turn Left"
+    elif -135 <= angle_deg < -30: # Negative angle (CW) is turn right
+        return angle_deg, "Turn Right"
     else: # angle_deg > 135 or angle_deg < -135
-        return angle_deg, "turn back"
+        return angle_deg, "Turn Back"
 
 def process_routes(all_actors, actor_df, distance_df):
     """Main function to process actors and generate route plan questions.
@@ -521,7 +522,7 @@ def process_routes(all_actors, actor_df, distance_df):
             current_instructions_for_route.append(f"{len(current_instructions_for_route) + 1}. [please fill in]")
             current_answers_for_route.append(turn_cmd) # Record the correct turn
             # Add go forward instruction
-            current_instructions_for_route.append(f"{len(current_instructions_for_route) + 1}. Go forward until the {target_actor_d['display_name']}")
+            current_instructions_for_route.append(f"{len(current_instructions_for_route) + 1}. Go forward until the {target_actor_d['display_name']}.")
             
             # Update state for the next iteration / next segment of the path:
             # The new facing direction is the direction of the movement just made.
@@ -530,25 +531,68 @@ def process_routes(all_actors, actor_df, distance_df):
             current_pos_actor_d = target_actor_d       
 
         # After processing all targets in the sequence for this route:
-        if valid_current_route and current_instructions_for_route:
-            instruction_block_str = "\n".join(current_instructions_for_route)
+        if valid_current_route and current_answers_for_route:
+            instruction_block_str = " ".join(current_instructions_for_route)
             # Construct the full question string
             question_str = (
                 f"You are a robot beginning at the {begin_actor_d['display_name']} facing the {facing_actor_d['display_name']}. "
                 f"You want to navigate to the {end_actor_d['display_name']}. "
-                f"You will perform the following actions (Note: for each [please fill in], choose either 'turn back,' 'turn left,' or 'turn right.'):\n"
-                f"{instruction_block_str}\n"
+                f"You will perform the following actions (Note: for each [please fill in], choose either 'turn back,' 'turn left,' or 'turn right.'): "
+                f"{instruction_block_str} "
                 f"You have reached the final destination."
             )
+
+            # Generate multiple choice options
+            options = []
+            answer_letter = ''
+            possible_turns = ['Turn Left', 'Turn Right', 'Turn Back']
+
+            if len(current_answers_for_route) == 1:
+                correct_answer_str = current_answers_for_route[0]
+                # Options are always the three basic turns, shuffled
+                mc_options = possible_turns[:]
+                random.shuffle(mc_options)
+                options = [f"{chr(65+i)}. {opt}" for i, opt in enumerate(mc_options)]
+                try:
+                    answer_letter = chr(65 + mc_options.index(correct_answer_str))
+                except ValueError:
+                    # print(f"Warning: Correct answer '{correct_answer_str}' not in mc_options. Skipping.")
+                    continue # Skip this question if correct answer isn't in options
             
+            elif len(current_answers_for_route) >= 2:
+                correct_answer_str = ', '.join(current_answers_for_route)
+                num_turns = len(current_answers_for_route)
+                all_mc_options_text = {correct_answer_str} # Use a set to store unique option strings
+
+                # Generate 3 unique incorrect options
+                while len(all_mc_options_text) < 4:
+                    incorrect_sequence = []
+                    for _ in range(num_turns):
+                        incorrect_sequence.append(random.choice(possible_turns))
+                    incorrect_sequence_str = ', '.join(incorrect_sequence)
+                    all_mc_options_text.add(incorrect_sequence_str)
+                
+                mc_options_list = list(all_mc_options_text)
+                random.shuffle(mc_options_list)
+                options = [f"{chr(65+i)}. {opt}" for i, opt in enumerate(mc_options_list)]
+                try:
+                    answer_letter = chr(65 + mc_options_list.index(correct_answer_str))
+                except ValueError:
+                    # print(f"Warning: Correct answer sequence '{correct_answer_str}' not in generated mc_options_list. Skipping.")
+                    continue # Skip this question
+            else:
+                # Should not happen if current_answers_for_route is populated and valid_current_route is True
+                continue
+
             # Store the generated question and its details
             generated_questions_list.append({
-                'BeginActor': begin_actor_d['name'], # Changed from display_name to name
-                'FacingActor': facing_actor_d['name'], # Changed from display_name to name
-                'EndActor': end_actor_d['name'], # Changed from display_name to name
-                'IntermediateStops': ', '.join(s['name'] for s in intermediate_stops_d_list) if intermediate_stops_d_list else '', # Changed from display_name to name
+                'BeginActor': begin_actor_d['name'],
+                'FacingActor': facing_actor_d['name'],
+                'EndActor': end_actor_d['name'],
+                'IntermediateStops': ', '.join(s['name'] for s in intermediate_stops_d_list) if intermediate_stops_d_list else '',
                 'Question': question_str,
-                'Answer': ', '.join(current_answers_for_route) # Comma-separated string of turn commands
+                'Answer': answer_letter, # Updated to be the letter
+                'Options': options # New field for multiple choice options
             })
 
     # After processing all valid routes:
