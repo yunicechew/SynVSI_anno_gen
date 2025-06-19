@@ -3,15 +3,24 @@ import subprocess
 import sys
 
 # Toggle flags for scripts
-ENABLE_VISUALIZATIONS = True  # Set to False to skip all visualization scripts
+ENABLE_VISUALIZATIONS = False  # Set to False to skip all visualization scripts
 ENABLE_FRAME_EXTRACTION = False  # Set to False to skip frame extraction script
 ENABLE_INFERENCE_SCRIPTS = False # Set to False to skip inference scripts
+
+# Centralized data subdirectory configuration
+DEFAULT_DATA_SUBDIR = "20250619-165147"  # Change this to your target data folder
 
 def run_script(script_path):
     """Run a Python script and check for errors"""
     print(f"\nRunning: {os.path.basename(script_path)}")
     print("-" * 50)
-    result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
+
+    # Prepare environment variables to pass to the script
+    env = os.environ.copy()
+    if DEFAULT_DATA_SUBDIR:
+        env['DEFAULT_DATA_SUBDIR'] = DEFAULT_DATA_SUBDIR
+
+    result = subprocess.run([sys.executable, script_path], capture_output=True, text=True, env=env)
     
     if result.returncode != 0:
         print(f"Error running {script_path}:")

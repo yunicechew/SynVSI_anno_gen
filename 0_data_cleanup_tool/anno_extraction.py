@@ -8,7 +8,8 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)  # Navigate up to SynVSI_anno_gen
 
 # Default values
-DEFAULT_DATA_SUBDIRECTORY = "20250527-145925"
+# Use environment variable if available, otherwise use the default
+DEFAULT_DATA_SUBDIRECTORY = os.environ.get('DEFAULT_DATA_SUBDIR', "20250527-145925")
 MIN_FRAME_COUNT = 5  # Minimum number of frames an actor must appear in
 MIN_VOLUME = 0.005   # Minimum volume in cubic meters
 
@@ -16,33 +17,31 @@ MIN_VOLUME = 0.005   # Minimum volume in cubic meters
 INPUT_DATA_ROOT = os.path.join(project_root, "0_original_ue_anno")  # Path to original UE anno directory
 OUTPUT_DATA_ROOT = os.path.join(project_root, "0_data_cleanup_tool", "output")  # Keep output in cleanup tool
 
-# Removed clean_actor_name function
-
 # --- Add the new function here ---
 def _determine_short_actor_name(actor_name: str, cleaned_actor_name: str) -> str:
-    """Determines a more short short actor name for VLM prompting."""
-    short_actor_name = actor_name  # Default
+    """
+    Determines a shorter, more readable actor name for VLM prompting.
+    It extracts the second to last part of the underscore-separated actor name,
+    formats it by splitting camel case, and converts it to lowercase.
+    Acronyms (e.g., 'TV') are kept together.
+    """
     parts = actor_name.split('_')
-    if len(parts) > 3:
-        raw_name_parts = []
-        for i in range(2, len(parts)):
-            if parts[i].endswith('v') and parts[i][:-1].isdigit():
-                break
-            raw_name_parts.append(parts[i])
-        if raw_name_parts:
-            joined_name = "".join(raw_name_parts)
-            short_actor_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', joined_name).lower()
-    elif len(parts) == 3:
-        if parts[1].lower() == 'to':
-            raw_name = parts[2]
-            short_actor_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', raw_name).lower()
-        else:
-            raw_name = parts[2]
-            short_actor_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', raw_name).lower()
+    
+    # Use the second to last part as the base for the short name.
+    # If there are less than 2 parts, use the whole name.
+    if len(parts) >= 2:
+        # The second to last part is usually the most descriptive name.
+        raw_name = parts[-2]
     else:
-        # Use cleaned_actor_name if provided and different, otherwise actor_name
-        # For this script, cleaned_actor_name will be the same as actor_name
-        short_actor_name = cleaned_actor_name.lower() if cleaned_actor_name else actor_name.lower()
+        raw_name = actor_name
+
+    # Add a space before any uppercase letter that is preceded by a lowercase letter.
+    # This correctly handles 'WashingMachine' -> 'Washing Machine' and 'MyTV' -> 'MyTV'.
+    spaced_name = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', raw_name)
+    
+    # Convert to lowercase
+    short_actor_name = spaced_name.lower()
+    
     return short_actor_name
 # --- End of new function ---
 

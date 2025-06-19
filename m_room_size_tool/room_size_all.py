@@ -20,7 +20,7 @@ def main():
     project_root = os.path.dirname(script_dir) # Navigates to SynVSI_anno_gen
 
     # Configurable timestamp folder
-    TIMESTAMP_FOLDER = "20250527-145925"  # You can change this value as needed
+    TIMESTAMP_FOLDER = os.environ.get('DEFAULT_DATA_SUBDIR', "20250527-145925")  # You can change this value as needed
 
     # Path to the directory containing the JSON file
     json_dir_path = os.path.join(project_root, '0_original_ue_anno', TIMESTAMP_FOLDER)

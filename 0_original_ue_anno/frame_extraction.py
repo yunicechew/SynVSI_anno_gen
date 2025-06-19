@@ -11,7 +11,7 @@ project_root = os.path.dirname(script_dir)  # Navigates up from 0_original_ue_an
 
 # Define the specific data subdirectory name (e.g., timestamped folder)
 # This can be changed if you process a different dataset
-DATA_SUBDIRECTORY_NAME = "20250527-145925"
+DATA_SUBDIRECTORY_NAME = os.environ.get('DEFAULT_DATA_SUBDIR', "20250619-165147")
 
 # Construct the base path to the input data using the project root
 INPUT_DATA_ROOT = os.path.join(script_dir, DATA_SUBDIRECTORY_NAME)
